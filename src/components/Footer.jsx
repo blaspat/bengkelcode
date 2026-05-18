@@ -74,8 +74,7 @@ export default function Footer() {
         <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
           <FooterLink icon={Info} label="About" onClick={() => setShowAbout(true)} />
           <FooterLink icon={Link2} label={copied ? 'Copied!' : 'Share Link'} onClick={handleShare} />
-          <FooterLink icon={Link2} label="GitHub" href="https://github.com/blaspat/bengkelcode" />
-          <FooterLink icon={Mail} label="Contact" href="mailto:blasius.patrick@gmail.com" />
+          <FooterLink icon={Mail} label="Contact" href="mailto:contact@bengkelcode.com" />
         </div>
       </footer>
       {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}

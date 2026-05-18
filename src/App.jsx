@@ -195,7 +195,7 @@ export default function App() {
             onClear={clearAll}
           />
         )}
-        {activeTab === 'qr' && (
+        {activeTab === 'qr' && qrState && (
           <QrGenerator
             state={qrState}
             onStateChange={setQrState}
