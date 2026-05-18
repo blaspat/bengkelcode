@@ -51,10 +51,9 @@ export default function App() {
   const [jwtState, setJwtState] = useState({ token: '', output: null, error: null })
   const [epochState, setEpochState] = useState({ epoch: '', output: null, error: null })
   const [sqlState, setSqlState] = useState({ input: '', output: '', error: null })
-  const [markdownState, setMarkdownState] = useState({ input: '', output: '' }) // null = not initialized yet
+  const [markdownState, setMarkdownState] = useState({ input: '', output: '' })
   const [qrState, setQrState] = useState({ input: '', size: 256 })
 
-  // Hydrate from localStorage on mount
   useEffect(() => {
     const saved = loadState()
     if (saved) {
@@ -80,7 +79,6 @@ export default function App() {
     }
   }, [])
 
-  // Persist on every state change
   useEffect(() => {
     saveState({ json: jsonState, xml: xmlState, cron: cronState, regex: regexState, encryption: encryptionState, jwt: jwtState, epoch: epochState, sql: sqlState, markdown: markdownState, qr: qrState })
   }, [jsonState, xmlState, cronState])
@@ -100,7 +98,6 @@ export default function App() {
 
   return (
     <div className="min-h-svh flex flex-col">
-      {/* Header */}
       <header className="flex items-center gap-3 px-6 py-4 border-b border-stone-200">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#F97316' }}>
           <Wrench className="w-5 h-5 text-white" />
@@ -111,13 +108,12 @@ export default function App() {
         </div>
       </header>
 
-      {/* Tab Bar */}
-      <nav className="flex gap-1 px-4 pt-4">
+      <nav className="flex gap-1 px-4 pt-4 overflow-x-auto">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             onClick={() => setActiveTab(id)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap ${
               activeTab === id
                 ? 'text-white'
                 : 'text-stone-500 hover:text-stone-700 hover:bg-stone-100'
@@ -130,78 +126,17 @@ export default function App() {
         ))}
       </nav>
 
-      {/* Tool Content */}
       <main className="flex-1 px-4 pb-6">
-        {activeTab === 'json' && (
-          <JsonLinter
-            state={jsonState}
-            onStateChange={setJsonState}
-            onClear={clearAll}
-          />
-        )}
-        {activeTab === 'xml' && (
-          <XmlLinter
-            state={xmlState}
-            onStateChange={setXmlState}
-            onClear={clearAll}
-          />
-        )}
-        {activeTab === 'cron' && cronState && (
-          <CronMaker
-            state={cronState}
-            onStateChange={setCronState}
-            onClear={clearAll}
-          />
-        )}
-        {activeTab === 'regex' && (
-          <RegexGenerator
-            state={regexState}
-            onStateChange={setRegexState}
-            onClear={clearAll}
-          />
-        )}
-        {activeTab === 'encryption' && (
-          <Encryption
-            state={encryptionState}
-            onStateChange={setEncryptionState}
-            onClear={clearAll}
-          />
-        )}
-        {activeTab === 'jwt' && (
-          <JwtDecoder
-            state={jwtState}
-            onStateChange={setJwtState}
-            onClear={clearAll}
-          />
-        )}
-        {activeTab === 'epoch' && (
-          <EpochConverter
-            state={epochState}
-            onStateChange={setEpochState}
-            onClear={clearAll}
-          />
-        )}
-        {activeTab === 'sql' && (
-          <SqlFormatter
-            state={sqlState}
-            onStateChange={setSqlState}
-            onClear={clearAll}
-          />
-        )}
-        {activeTab === 'markdown' && (
-          <MarkdownPreview
-            state={markdownState}
-            onStateChange={setMarkdownState}
-            onClear={clearAll}
-          />
-        )}
-        {activeTab === 'qr' && qrState && (
-          <QrGenerator
-            state={qrState}
-            onStateChange={setQrState}
-            onClear={clearAll}
-          />
-        )}
+        {activeTab === 'json' && <JsonLinter state={jsonState} onStateChange={setJsonState} onClear={clearAll} />}
+        {activeTab === 'xml' && <XmlLinter state={xmlState} onStateChange={setXmlState} onClear={clearAll} />}
+        {activeTab === 'cron' && cronState && <CronMaker state={cronState} onStateChange={setCronState} onClear={clearAll} />}
+        {activeTab === 'regex' && <RegexGenerator state={regexState} onStateChange={setRegexState} onClear={clearAll} />}
+        {activeTab === 'encryption' && <Encryption state={encryptionState} onStateChange={setEncryptionState} onClear={clearAll} />}
+        {activeTab === 'jwt' && <JwtDecoder state={jwtState} onStateChange={setJwtState} onClear={clearAll} />}
+        {activeTab === 'epoch' && <EpochConverter state={epochState} onStateChange={setEpochState} onClear={clearAll} />}
+        {activeTab === 'sql' && <SqlFormatter state={sqlState} onStateChange={setSqlState} onClear={clearAll} />}
+        {activeTab === 'markdown' && <MarkdownPreview state={markdownState} onStateChange={setMarkdownState} onClear={clearAll} />}
+        {activeTab === 'qr' && qrState && <QrGenerator state={qrState} onStateChange={setQrState} onClear={clearAll} />}
       </main>
 
       <Footer />
