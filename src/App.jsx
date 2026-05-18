@@ -10,6 +10,7 @@ import EpochConverter from './components/EpochConverter'
 import SqlFormatter from './components/SqlFormatter'
 import MarkdownPreview from './components/MarkdownPreview'
 import QrGenerator from './components/QrGenerator'
+import Footer from './components/Footer'
 
 const tabs = [
   { id: 'json', label: 'JSON Linter', icon: Braces },
@@ -202,6 +203,8 @@ export default function App() {
           />
         )}
       </main>
+
+      <Footer />
     </div>
   )
 }
