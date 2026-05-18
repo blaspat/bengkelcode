@@ -1,16 +1,81 @@
 import { useState, useCallback } from 'react'
 import { Play, Copy, Trash2, Check } from 'lucide-react'
+import TextareaWithGutter from './TextareaWithGutter'
 
-export default function XmlLinter() {
-  const [input, setInput] = useState('')
-  const [output, setOutput] = useState('')
-  const [error, setError] = useState(null)
+function formatXml(xmlString) {
+  // Parse and re-serialize to normalize
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(xmlString, 'application/xml')
+  const serialize = new XMLSerializer()
+  let xml = serialize.serializeToString(doc)
+
+  const formatted = []
+  let indent = 0
+  let i = 0
+
+  while (i < xml.length) {
+    // Skip any whitespace
+    while (i < xml.length && xml[i] === ' ') i++
+    if (i >= xml.length) break
+
+    if (xml[i] === '<') {
+      let tagEnd = xml.indexOf('>', i)
+      if (tagEnd === -1) break
+      const tag = xml.slice(i, tagEnd + 1)
+
+      // Self-closing tag — emit and don't change indent
+      if (tag.endsWith('/>')) {
+        formatted.push('  '.repeat(indent) + tag)
+        i = tagEnd + 1
+        continue
+      }
+
+      // Closing tag — dedent first, then emit
+      if (tag.startsWith('</')) {
+        indent = Math.max(0, indent - 1)
+        formatted.push('  '.repeat(indent) + tag)
+        i = tagEnd + 1
+        continue
+      }
+
+      // Doctype / comment / CDATA
+      if (tag.startsWith('<?') || tag.startsWith('<!')) {
+        formatted.push('  '.repeat(indent) + tag)
+        i = tagEnd + 1
+        continue
+      }
+
+      // Opening tag — emit, then indent for content
+      formatted.push('  '.repeat(indent) + tag)
+      indent++
+      i = tagEnd + 1
+      continue
+    }
+
+    // Text content — capture everything up to the next '<' (may be empty on next iteration)
+    let textEnd = xml.indexOf('<', i)
+    if (textEnd === -1) textEnd = xml.length
+    const text = xml.slice(i, textEnd).trim()
+    if (text) {
+      formatted.push('  '.repeat(indent) + text)
+    }
+    i = textEnd
+  }
+
+  return formatted.join('\n')
+}
+
+export default function XmlLinter({ state, onStateChange }) {
+  const { input, output, error } = state
   const [copied, setCopied] = useState(false)
+
+  const setInput = useCallback((val) => {
+    onStateChange(s => ({ ...s, input: typeof val === 'function' ? val(s.input) : val }))
+  }, [onStateChange])
 
   const lint = useCallback(() => {
     if (!input.trim()) {
-      setError('Please enter some XML first')
-      setOutput('')
+      onStateChange(s => ({ ...s, error: 'Please enter some XML first', output: '' }))
       return
     }
     try {
@@ -19,38 +84,19 @@ export default function XmlLinter() {
       const parseError = doc.querySelector('parsererror')
       if (parseError) {
         const errorText = parseError.textContent
-        // Try to extract line/column from error message
         const lineMatch = errorText.match(/line (\d+)/i)
         const colMatch = errorText.match(/column (\d+)/i)
         const line = lineMatch ? lineMatch[1] : '?'
         const col = colMatch ? colMatch[1] : '?'
-        setError(`Invalid XML — line ${line}, column ${col}`)
-        setOutput('')
+        onStateChange(s => ({ ...s, error: `Invalid XML — line ${line}, column ${col}`, output: '' }))
         return
       }
-      // Format the XML
-      const serializer = new XMLSerializer()
-      let xml = serializer.serializeToString(doc)
-      // Simple formatting
-      let formatted = ''
-      let indent = 0
-      const parts = xml.match(/<[^>]+>|<[^>]+/g) || []
-      for (const part of parts) {
-        if (part.match(/^<\/\w/)) {
-          indent = Math.max(0, indent - 1)
-        }
-        formatted += '  '.repeat(indent) + part + (part.endsWith('/>') || part.startsWith('<?') || part.startsWith('<!') ? '\n' : '')
-        if (part.match(/^<\w[^/>]*[^\/]>$/)) {
-          indent++
-        }
-      }
-      setOutput(formatted.trim())
-      setError(null)
+      const formatted = formatXml(input)
+      onStateChange(s => ({ ...s, output: formatted, error: null }))
     } catch (e) {
-      setError(`Invalid XML: ${e.message}`)
-      setOutput('')
+      onStateChange(s => ({ ...s, error: `Invalid XML: ${e.message}`, output: '' }))
     }
-  }, [input])
+  }, [input, onStateChange])
 
   const copy = useCallback(() => {
     if (!output) return
@@ -60,21 +106,17 @@ export default function XmlLinter() {
   }, [output])
 
   const clear = useCallback(() => {
-    setInput('')
-    setOutput('')
-    setError(null)
-  }, [])
+    onStateChange(s => ({ input: '', output: '', error: null }))
+  }, [onStateChange])
 
   return (
     <div className="mt-4 flex flex-col lg:flex-row gap-4 h-[calc(100svh-200px)] lg:h-[calc(100svh-180px)]">
       {/* Input */}
       <div className="flex-1 flex flex-col min-h-48 lg:min-h-0">
-        <textarea
+        <TextareaWithGutter
           value={input}
           onChange={e => setInput(e.target.value)}
           placeholder={'Paste your XML here...\n\n<config>\n  <app>bengkelcode</app>\n</config>'}
-          className="flex-1 w-full p-4 rounded-2xl border border-stone-200 font-mono text-sm text-stone-800 placeholder-stone-300 resize-none focus:outline-none focus:border-orange-400 transition-colors"
-          style={{ backgroundColor: '#fafaf9' }}
         />
       </div>
 
@@ -85,7 +127,6 @@ export default function XmlLinter() {
           style={{
             backgroundColor: error ? '#fef2f2' : output ? '#f5f5f4' : '#fafaf9',
             borderColor: error ? '#fecaca' : output ? '#e7e5e4' : '#e7e5e4',
-            color: error ? '#ef4444' : output ? '#1c1917' : '#d6d3d1',
           }}
         >
           {error ? (

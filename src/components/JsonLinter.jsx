@@ -1,23 +1,24 @@
 import { useState, useCallback } from 'react'
 import { Play, Copy, Trash2, Check } from 'lucide-react'
+import TextareaWithGutter from './TextareaWithGutter'
 
-export default function JsonLinter() {
-  const [input, setInput] = useState('')
-  const [output, setOutput] = useState('')
-  const [error, setError] = useState(null)
+export default function JsonLinter({ state, onStateChange, onClear }) {
+  const { input, output, error } = state
   const [copied, setCopied] = useState(false)
+
+  const setInput = useCallback((val) => {
+    onStateChange(s => ({ ...s, input: typeof val === 'function' ? val(s.input) : val }))
+  }, [onStateChange])
 
   const lint = useCallback(() => {
     if (!input.trim()) {
-      setError('Please enter some JSON first')
-      setOutput('')
+      onStateChange(s => ({ ...s, error: 'Please enter some JSON first', output: '' }))
       return
     }
     try {
       const parsed = JSON.parse(input)
       const formatted = JSON.stringify(parsed, null, 2)
-      setOutput(formatted)
-      setError(null)
+      onStateChange(s => ({ ...s, output: formatted, error: null }))
     } catch (e) {
       const msg = e.message
       const match = msg.match(/position (\d+)/)
@@ -26,17 +27,12 @@ export default function JsonLinter() {
         const lines = input.substring(0, pos).split('\n')
         const line = lines.length
         const col = lines[lines.length - 1].length + 1
-        setError(`Invalid JSON — line ${line}, column ${col}: ${msg}`)
+        onStateChange(s => ({ ...s, error: `Invalid JSON — line ${line}, column ${col}: ${msg}`, output: '' }))
       } else {
-        setError(`Invalid JSON: ${msg}`)
+        onStateChange(s => ({ ...s, error: `Invalid JSON: ${msg}`, output: '' }))
       }
-      setOutput('')
     }
-  }, [input])
-
-  const format = useCallback(() => {
-    lint()
-  }, [lint])
+  }, [input, onStateChange])
 
   const copy = useCallback(() => {
     if (!output) return
@@ -46,21 +42,17 @@ export default function JsonLinter() {
   }, [output])
 
   const clear = useCallback(() => {
-    setInput('')
-    setOutput('')
-    setError(null)
-  }, [])
+    onStateChange(s => ({ input: '', output: '', error: null }))
+  }, [onStateChange])
 
   return (
     <div className="mt-4 flex flex-col lg:flex-row gap-4 h-[calc(100svh-200px)] lg:h-[calc(100svh-180px)]">
       {/* Input */}
       <div className="flex-1 flex flex-col min-h-48 lg:min-h-0">
-        <textarea
+        <TextareaWithGutter
           value={input}
           onChange={e => setInput(e.target.value)}
-          placeholder='Paste your JSON here...&#10;&#10;{"name": "bengkelcode", "version": "1.0"}'
-          className="flex-1 w-full p-4 rounded-2xl border border-stone-200 font-mono text-sm text-stone-800 placeholder-stone-300 resize-none focus:outline-none focus:border-orange-400 transition-colors"
-          style={{ backgroundColor: '#fafaf9' }}
+          placeholder={'Paste your JSON here...\n\n{"name": "bengkelcode", "version": "1.0"}'}
         />
       </div>
 
@@ -71,7 +63,6 @@ export default function JsonLinter() {
           style={{
             backgroundColor: error ? '#fef2f2' : output ? '#f5f5f4' : '#fafaf9',
             borderColor: error ? '#fecaca' : output ? '#e7e5e4' : '#e7e5e4',
-            color: error ? '#ef4444' : output ? '#1c1917' : '#d6d3d1',
           }}
         >
           {error ? (

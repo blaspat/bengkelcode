@@ -8,32 +8,27 @@ const fieldDefs = [
     name: 'minute',
     label: 'Minute',
     values: ['*', ...Array.from({ length: 60 }, (_, i) => String(i))],
-    custom: true,
   },
   {
     name: 'hour',
     label: 'Hour',
     values: ['*', ...Array.from({ length: 24 }, (_, i) => String(i))],
-    custom: true,
   },
   {
     name: 'day',
     label: 'Day',
     values: ['*', ...Array.from({ length: 31 }, (_, i) => String(i + 1))],
-    custom: true,
   },
   {
     name: 'month',
     label: 'Month',
     values: ['*', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'],
-    custom: true,
   },
   {
     name: 'weekday',
     label: 'Weekday',
     values: ['*', '0', '1', '2', '3', '4', '5', '6'],
     labels: { '*': 'Every', '0': 'Sun', '1': 'Mon', '2': 'Tue', '3': 'Wed', '4': 'Thu', '5': 'Fri', '6': 'Sat' },
-    custom: true,
   },
 ]
 
@@ -61,37 +56,41 @@ function getNextRuns(expression, count = 5) {
   }
 }
 
-export default function CronMaker() {
-  const [fields, setFields] = useState({
-    minute: '*',
-    hour: '*',
-    day: '*',
-    month: '*',
-    weekday: '*',
-  })
-  const [expression, setExpression] = useState('* * * * *')
+export default function CronMaker({ state, onStateChange }) {
+  const { fields, expression } = state
   const [description, setDescription] = useState('')
   const [nextRuns, setNextRuns] = useState([])
   const [error, setError] = useState(null)
   const [copied, setCopied] = useState(false)
 
-  const updateFromFields = useCallback((newFields) => {
+  // Sync computed fields when state loads from localStorage
+  useEffect(() => {
+    if (expression) {
+      try {
+        setDescription(cronstrue.toString(expression))
+        setNextRuns(getNextRuns(expression, 5))
+        setError(null)
+      } catch (e) {
+        setError(e.message)
+      }
+    }
+  }, [expression]) // eslint-disable-line
+
+  const rebuild = useCallback((newFields) => {
     const expr = buildExpression(newFields)
-    setExpression(expr)
     try {
       setDescription(cronstrue.toString(expr))
-      const runs = getNextRuns(expr, 5)
-      setNextRuns(runs)
+      setNextRuns(getNextRuns(expr, 5))
       setError(null)
     } catch (e) {
       setDescription('')
       setNextRuns([])
       setError(e.message)
     }
+    return { fields: newFields, expression: expr }
   }, [])
 
-  const updateFromExpression = useCallback((expr) => {
-    setExpression(expr)
+  const syncFromExpression = useCallback((expr) => {
     const parsed = parseCronExpression(expr)
     if (!parsed) {
       setError('Invalid cron expression — use 5 fields: minute hour day month weekday')
@@ -99,32 +98,28 @@ export default function CronMaker() {
       setNextRuns([])
       return
     }
-    setFields(parsed)
     try {
       setDescription(cronstrue.toString(expr))
       const runs = getNextRuns(expr, 5)
       setNextRuns(runs)
       setError(null)
-    } catch (e) {
+    } catch {
+      setError('Invalid expression')
       setDescription('')
       setNextRuns([])
-      setError('Invalid expression')
     }
-  }, [])
+    onStateChange({ fields: parsed, expression: expr })
+  }, [onStateChange])
 
   const handleFieldChange = useCallback((field, value) => {
     const newFields = { ...fields, [field]: value }
-    setFields(newFields)
-    updateFromFields(newFields)
-  }, [fields, updateFromFields])
+    const newState = rebuild(newFields)
+    onStateChange(newState)
+  }, [fields, rebuild, onStateChange])
 
   const handleExpressionChange = useCallback((e) => {
-    updateFromExpression(e.target.value)
-  }, [updateFromExpression])
-
-  useEffect(() => {
-    updateFromFields(fields)
-  }, []) // eslint-disable-line
+    syncFromExpression(e.target.value)
+  }, [syncFromExpression])
 
   const copy = useCallback(() => {
     navigator.clipboard.writeText(expression)
@@ -133,10 +128,12 @@ export default function CronMaker() {
   }, [expression])
 
   const clear = useCallback(() => {
-    const empty = { minute: '*', hour: '*', day: '*', month: '*', weekday: '*' }
-    setFields(empty)
-    updateFromFields(empty)
-  }, [updateFromFields])
+    const empty = { fields: { minute: '*', hour: '*', day: '*', month: '*', weekday: '*' }, expression: '* * * * *' }
+    setDescription(cronstrue.toString('* * * * *'))
+    setNextRuns(getNextRuns('* * * * *', 5))
+    setError(null)
+    onStateChange(empty)
+  }, [onStateChange])
 
   const formatDate = (date) => {
     return date.toLocaleString('en-US', {
