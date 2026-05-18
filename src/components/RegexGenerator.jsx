@@ -71,6 +71,50 @@ function MultiSelect({ options, selected, onChange, labels }) {
   )
 }
 
+const FLAG_INFO = {
+  g: { label: 'global', desc: 'Find all matches, not just the first one' },
+  i: { label: 'case-insensitive', desc: 'Match letters regardless of upper/lowercase' },
+  m: { label: 'multiline', desc: '^ and $ match start/end of each line' },
+  s: { label: 'dotall', desc: '. matches newline characters too' },
+}
+
+const CHEATSHEET = [
+  { pattern: '.', desc: 'Any single character (except newline)' },
+  { pattern: '\\w', desc: 'Word character [a-zA-Z0-9_]' },
+  { pattern: '\\W', desc: 'Non-word character' },
+  { pattern: '\\d', desc: 'Digit [0-9]' },
+  { pattern: '\\D', desc: 'Non-digit' },
+  { pattern: '\\s', desc: 'Whitespace (space, tab, newline)' },
+  { pattern: '\\S', desc: 'Non-whitespace' },
+  { pattern: '\\b', desc: 'Word boundary' },
+  { pattern: '^', desc: 'Start of string/line' },
+  { pattern: '$', desc: 'End of string/line' },
+  { pattern: '*', desc: '0 or more of previous' },
+  { pattern: '+', desc: '1 or more of previous' },
+  { pattern: '?', desc: '0 or 1 of previous (optional)' },
+  { pattern: '{n}', desc: 'Exactly n times' },
+  { pattern: '{n,m}', desc: 'Between n and m times' },
+  { pattern: '[abc]', desc: 'Any character in set: a, b, or c' },
+  { pattern: '[^abc]', desc: 'Any character NOT in set' },
+  { pattern: '(abc)', desc: 'Capture group' },
+  { pattern: 'a|b', desc: 'Alternation: a OR b' },
+]
+
+function Tooltip({ text }) {
+  const [show, setShow] = useState(false)
+  return (
+    <span className="relative inline-block cursor-help" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
+      <span className="text-stone-400 border-b border-dashed border-stone-300">?</span>
+      {show && (
+        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 rounded bg-stone-800 text-white text-xs whitespace-nowrap z-50">
+          {text}
+          <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-stone-800" />
+        </span>
+      )}
+    </span>
+  )
+}
+
 export default function RegexGenerator({ state, onStateChange }) {
   const { testString, pattern, flags } = state
   const [copied, setCopied] = useState(false)
@@ -156,11 +200,11 @@ export default function RegexGenerator({ state, onStateChange }) {
         </button>
       </div>
 
-      {/* Flags row */}
+      {/* Flags row with hover info */}
       <div className="flex gap-2 items-center">
         <span className="text-xs text-stone-400 uppercase">Flags:</span>
         {['g', 'i', 'm', 's'].map(f => (
-          <label key={f} className="flex items-center gap-1 text-sm text-stone-600 cursor-pointer">
+          <label key={f} className="flex items-center gap-1 text-sm text-stone-600 cursor-pointer group">
             <input
               type="checkbox"
               checked={flags.includes(f)}
@@ -171,27 +215,27 @@ export default function RegexGenerator({ state, onStateChange }) {
               }}
               className="rounded border-stone-300 text-orange-500 focus:ring-orange-400"
             />
-            {f}
+            <span className="font-mono text-orange-500">{f}</span>
+            <Tooltip text={`${FLAG_INFO[f].label} — ${FLAG_INFO[f].desc}`} />
           </label>
         ))}
+        <span className="ml-2 text-xs text-stone-400">(hover ? for flag info)</span>
       </div>
 
-      {/* Common patterns */}
-      <div>
-        <p className="text-xs text-stone-400 uppercase mb-2">Common Patterns</p>
-        <div className="flex flex-wrap gap-2">
-          {COMMON_REGEX.map(({ label, pattern: p }) => (
-            <button
-              key={p}
-              onClick={() => applyPattern(p)}
-              className="px-3 py-1.5 rounded-full text-xs font-medium border border-stone-200 text-stone-600 hover:border-orange-400 hover:text-orange-500 transition-colors"
-              style={{ backgroundColor: '#fafaf9' }}
-            >
-              {label}
-            </button>
+      {/* Cheatsheet */}
+      <details className="rounded-xl border border-stone-200 overflow-hidden" style={{ backgroundColor: '#fafaf9' }}>
+        <summary className="px-4 py-2 text-xs text-stone-400 uppercase cursor-pointer hover:bg-stone-50">
+          Cheatsheet — click to expand
+        </summary>
+        <div className="px-4 pb-3 grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1">
+          {CHEATSHEET.map(({ pattern, desc }) => (
+            <div key={pattern} className="flex gap-2 text-xs">
+              <code className="font-mono text-orange-500 bg-orange-50 px-1 rounded">{pattern}</code>
+              <span className="text-stone-500">{desc}</span>
+            </div>
           ))}
         </div>
-      </div>
+      </details>
 
       {/* Error */}
       {error && (
