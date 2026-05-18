@@ -122,21 +122,17 @@ export default function XmlLinter({ state, onStateChange }) {
 
       {/* Output */}
       <div className="flex-1 flex flex-col min-h-48 lg:min-h-0">
-        <div
-          className="flex-1 w-full p-4 rounded-2xl border overflow-auto font-mono text-sm"
-          style={{
-            backgroundColor: error ? '#fef2f2' : output ? '#f5f5f4' : '#fafaf9',
-            borderColor: error ? '#fecaca' : output ? '#e7e5e4' : '#e7e5e4',
-          }}
-        >
-          {error ? (
-            <span className="text-red-500">{error}</span>
-          ) : output ? (
-            <pre className="whitespace-pre-wrap">{output}</pre>
-          ) : (
-            <span className="text-stone-300">Formatted output will appear here...</span>
-          )}
-        </div>
+        {error && (
+          <div className="mb-2 px-4 py-2 rounded-xl text-sm text-red-500" style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca' }}>
+            {error}
+          </div>
+        )}
+        <TextareaWithGutter
+          value={error ? '' : output}
+          readOnly
+          placeholder={error ? '' : 'Formatted output will appear here...'}
+          className="cursor-default"
+        />
       </div>
 
       {/* FABs */}
