@@ -10,6 +10,7 @@ import EpochConverter from './components/EpochConverter'
 import SqlFormatter from './components/SqlFormatter'
 import MarkdownPreview from './components/MarkdownPreview'
 import QrGenerator from './components/QrGenerator'
+import YamlConverter from './components/YamlConverter'
 import Footer from './components/Footer'
 
 const tabs = [
@@ -23,6 +24,7 @@ const tabs = [
   { id: 'sql', label: 'SQL Formatter', icon: Database },
   { id: 'markdown', label: 'Markdown Preview', icon: FileText },
   { id: 'qr', label: 'QR Generator', icon: QrCode },
+  { id: 'yaml', label: 'YAML Converter', icon: Braces },
 ]
 
 const STORAGE_KEY = 'bengkelcode-state-v1'
@@ -53,6 +55,7 @@ export default function App() {
   const [sqlState, setSqlState] = useState({ input: '', output: '', error: null })
   const [markdownState, setMarkdownState] = useState({ input: '', output: '' })
   const [qrState, setQrState] = useState({ input: '', size: 256 })
+  const [yamlState, setYamlState] = useState({ input: '', output: '', error: null })
 
   useEffect(() => {
     const saved = loadState()
@@ -67,6 +70,7 @@ export default function App() {
       if (saved.sql) setSqlState(saved.sql)
       if (saved.markdown) setMarkdownState(saved.markdown)
       if (saved.qr) setQrState(saved.qr)
+      if (saved.yaml) setYamlState(saved.yaml)
     } else {
       setCronState({ fields: { minute: '*', hour: '*', day: '*', month: '*', weekday: '*' }, expression: '* * * * *' })
       setRegexState({ testString: '', pattern: '', flags: 'g' })
@@ -76,12 +80,13 @@ export default function App() {
       setSqlState({ input: '', output: '', error: null })
       setMarkdownState({ input: '', output: '' })
       setQrState({ input: '', size: 256 })
+      setYamlState({ input: '', output: '', error: null })
     }
   }, [])
 
   useEffect(() => {
-    saveState({ json: jsonState, xml: xmlState, cron: cronState, regex: regexState, encryption: encryptionState, jwt: jwtState, epoch: epochState, sql: sqlState, markdown: markdownState, qr: qrState })
-  }, [jsonState, xmlState, cronState])
+    saveState({ json: jsonState, xml: xmlState, cron: cronState, regex: regexState, encryption: encryptionState, jwt: jwtState, epoch: epochState, sql: sqlState, markdown: markdownState, qr: qrState, yaml: yamlState })
+  }, [jsonState, xmlState, cronState, yamlState])
 
   const clearAll = useCallback(() => {
     setJsonState({ input: '', output: '', error: null })
@@ -94,6 +99,7 @@ export default function App() {
     setSqlState({ input: '', output: '', error: null })
     setMarkdownState({ input: '', output: '' })
     setQrState({ input: '', size: 256 })
+    setYamlState({ input: '', output: '', error: null })
   }, [])
 
   return (
@@ -137,6 +143,7 @@ export default function App() {
         {activeTab === 'sql' && <SqlFormatter state={sqlState} onStateChange={setSqlState} onClear={clearAll} />}
         {activeTab === 'markdown' && <MarkdownPreview state={markdownState} onStateChange={setMarkdownState} onClear={clearAll} />}
         {activeTab === 'qr' && qrState && <QrGenerator state={qrState} onStateChange={setQrState} onClear={clearAll} />}
+        {activeTab === 'yaml' && <YamlConverter state={yamlState} onStateChange={setYamlState} onClear={clearAll} />}
       </main>
 
       <Footer />

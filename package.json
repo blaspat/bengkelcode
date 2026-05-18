@@ -12,6 +12,7 @@
   "dependencies": {
     "cron-parser": "^5.5.0",
     "cronstrue": "^3.14.0",
+    "js-yaml": "^4.1.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },
