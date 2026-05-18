@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link2, Mail, X, Info } from 'lucide-react'
+import { Link2, Mail, X, Info, Shield } from 'lucide-react'
 
 function AboutModal({ onClose }) {
   useEffect(() => {
@@ -56,8 +56,41 @@ function FooterLink({ icon: Icon, label, href, onClick, children }) {
   )
 }
 
+function PrivacyModal({ onClose }) {
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [onClose])
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-stone-400 hover:text-stone-600 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#F97316' }}>
+            <Shield className="w-5 h-5 text-white" />
+          </div>
+          <h2 className="text-lg font-semibold text-stone-900">Privacy Policy</h2>
+        </div>
+        <p className="text-sm text-stone-600 leading-relaxed">
+          All tools in bengkelcode run entirely in your browser. No data is sent to any server. 
+          We do not collect, store, or share any information you enter. Your input stays on your device.
+        </p>
+      </div>
+    </div>
+  )
+}
+
 export default function Footer() {
   const [showAbout, setShowAbout] = useState(false)
+  const [showPrivacy, setShowPrivacy] = useState(false)
   const [copied, setCopied] = useState(false)
 
   const handleShare = async () => {
@@ -74,10 +107,12 @@ export default function Footer() {
         <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
           <FooterLink icon={Info} label="About" onClick={() => setShowAbout(true)} />
           <FooterLink icon={Link2} label={copied ? 'Copied!' : 'Share Link'} onClick={handleShare} />
+          <FooterLink icon={Shield} label="Privacy Policy" onClick={() => setShowPrivacy(true)} />
           <FooterLink icon={Mail} label="Contact" href="mailto:contact@bengkelcode.com" />
         </div>
       </footer>
       {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
+      {showPrivacy && <PrivacyModal onClose={() => setShowPrivacy(false)} />}
     </>
   )
 }
