@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { Play, Copy, Trash2, Check } from 'lucide-react'
 import TextareaWithGutter from './TextareaWithGutter'
 import AdPlaceholder from './AdPlaceholder'
+import CollapsibleTree from './CollapsibleTree'
 
 export default function JsonLinter({ state, onStateChange, onClear }) {
   const { input, output, error } = state
@@ -13,13 +14,12 @@ export default function JsonLinter({ state, onStateChange, onClear }) {
 
   const lint = useCallback(() => {
     if (!input.trim()) {
-      onStateChange(s => ({ ...s, error: 'Please enter some JSON first', output: '' }))
+      onStateChange(s => ({ ...s, error: 'Please enter some JSON first', output: null }))
       return
     }
     try {
       const parsed = JSON.parse(input)
-      const formatted = JSON.stringify(parsed, null, 2)
-      onStateChange(s => ({ ...s, output: formatted, error: null }))
+      onStateChange(s => ({ ...s, output: parsed, error: null }))
     } catch (e) {
       const msg = e.message
       const match = msg.match(/position (\d+)/)
@@ -28,22 +28,22 @@ export default function JsonLinter({ state, onStateChange, onClear }) {
         const lines = input.substring(0, pos).split('\n')
         const line = lines.length
         const col = lines[lines.length - 1].length + 1
-        onStateChange(s => ({ ...s, error: `Invalid JSON — line ${line}, column ${col}: ${msg}`, output: '' }))
+        onStateChange(s => ({ ...s, error: `Invalid JSON — line ${line}, column ${col}: ${msg}`, output: null }))
       } else {
-        onStateChange(s => ({ ...s, error: `Invalid JSON: ${msg}`, output: '' }))
+        onStateChange(s => ({ ...s, error: `Invalid JSON: ${msg}`, output: null }))
       }
     }
   }, [input, onStateChange])
 
   const copy = useCallback(() => {
     if (!output) return
-    navigator.clipboard.writeText(output)
+    navigator.clipboard.writeText(JSON.stringify(output, null, 2))
     setCopied(true)
     setTimeout(() => setCopied(false), 1500)
   }, [output])
 
   const clear = useCallback(() => {
-    onStateChange(s => ({ input: '', output: '', error: null }))
+    onStateChange(s => ({ input: '', output: null, error: null }))
   }, [onStateChange])
 
   return (
@@ -64,12 +64,16 @@ export default function JsonLinter({ state, onStateChange, onClear }) {
             {error}
           </div>
         )}
-        <TextareaWithGutter
-          value={error ? '' : output}
-          readOnly
-          placeholder={error ? '' : 'Formatted output will appear here...'}
-          className="cursor-default"
-        />
+        <div
+          className="flex-1 rounded-2xl border border-stone-200 overflow-auto p-4"
+          style={{ backgroundColor: output ? '#fafaf9' : '#fafaf9' }}
+        >
+          {output ? (
+            <CollapsibleTree data={output} />
+          ) : (
+            <span className="text-stone-300">Formatted output will appear here...</span>
+          )}
+        </div>
       </div>
 
       {/* Ad placeholder */}

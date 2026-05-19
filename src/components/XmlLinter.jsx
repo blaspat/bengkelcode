@@ -2,68 +2,13 @@ import { useState, useCallback } from 'react'
 import { Play, Copy, Trash2, Check } from 'lucide-react'
 import TextareaWithGutter from './TextareaWithGutter'
 import AdPlaceholder from './AdPlaceholder'
+import XmlTree from './XmlTree'
 
 function formatXml(xmlString) {
-  // Parse and re-serialize to normalize
   const parser = new DOMParser()
   const doc = parser.parseFromString(xmlString, 'application/xml')
   const serialize = new XMLSerializer()
-  let xml = serialize.serializeToString(doc)
-
-  const formatted = []
-  let indent = 0
-  let i = 0
-
-  while (i < xml.length) {
-    // Skip any whitespace
-    while (i < xml.length && xml[i] === ' ') i++
-    if (i >= xml.length) break
-
-    if (xml[i] === '<') {
-      let tagEnd = xml.indexOf('>', i)
-      if (tagEnd === -1) break
-      const tag = xml.slice(i, tagEnd + 1)
-
-      // Self-closing tag — emit and don't change indent
-      if (tag.endsWith('/>')) {
-        formatted.push('  '.repeat(indent) + tag)
-        i = tagEnd + 1
-        continue
-      }
-
-      // Closing tag — dedent first, then emit
-      if (tag.startsWith('</')) {
-        indent = Math.max(0, indent - 1)
-        formatted.push('  '.repeat(indent) + tag)
-        i = tagEnd + 1
-        continue
-      }
-
-      // Doctype / comment / CDATA
-      if (tag.startsWith('<?') || tag.startsWith('<!')) {
-        formatted.push('  '.repeat(indent) + tag)
-        i = tagEnd + 1
-        continue
-      }
-
-      // Opening tag — emit, then indent for content
-      formatted.push('  '.repeat(indent) + tag)
-      indent++
-      i = tagEnd + 1
-      continue
-    }
-
-    // Text content — capture everything up to the next '<' (may be empty on next iteration)
-    let textEnd = xml.indexOf('<', i)
-    if (textEnd === -1) textEnd = xml.length
-    const text = xml.slice(i, textEnd).trim()
-    if (text) {
-      formatted.push('  '.repeat(indent) + text)
-    }
-    i = textEnd
-  }
-
-  return formatted.join('\n')
+  return serialize.serializeToString(doc)
 }
 
 export default function XmlLinter({ state, onStateChange }) {
@@ -76,7 +21,7 @@ export default function XmlLinter({ state, onStateChange }) {
 
   const lint = useCallback(() => {
     if (!input.trim()) {
-      onStateChange(s => ({ ...s, error: 'Please enter some XML first', output: '' }))
+      onStateChange(s => ({ ...s, error: 'Please enter some XML first', output: null }))
       return
     }
     try {
@@ -89,25 +34,25 @@ export default function XmlLinter({ state, onStateChange }) {
         const colMatch = errorText.match(/column (\d+)/i)
         const line = lineMatch ? lineMatch[1] : '?'
         const col = colMatch ? colMatch[1] : '?'
-        onStateChange(s => ({ ...s, error: `Invalid XML — line ${line}, column ${col}`, output: '' }))
+        onStateChange(s => ({ ...s, error: `Invalid XML — line ${line}, column ${col}`, output: null }))
         return
       }
-      const formatted = formatXml(input)
-      onStateChange(s => ({ ...s, output: formatted, error: null }))
+      onStateChange(s => ({ ...s, output: doc, error: null }))
     } catch (e) {
-      onStateChange(s => ({ ...s, error: `Invalid XML: ${e.message}`, output: '' }))
+      onStateChange(s => ({ ...s, error: `Invalid XML: ${e.message}`, output: null }))
     }
   }, [input, onStateChange])
 
   const copy = useCallback(() => {
     if (!output) return
-    navigator.clipboard.writeText(output)
+    const serializer = new XMLSerializer()
+    navigator.clipboard.writeText(serializer.serializeToString(output))
     setCopied(true)
     setTimeout(() => setCopied(false), 1500)
   }, [output])
 
   const clear = useCallback(() => {
-    onStateChange(s => ({ input: '', output: '', error: null }))
+    onStateChange(s => ({ input: '', output: null, error: null }))
   }, [onStateChange])
 
   return (
@@ -128,12 +73,16 @@ export default function XmlLinter({ state, onStateChange }) {
             {error}
           </div>
         )}
-        <TextareaWithGutter
-          value={error ? '' : output}
-          readOnly
-          placeholder={error ? '' : 'Formatted output will appear here...'}
-          className="cursor-default"
-        />
+        <div
+          className="flex-1 rounded-2xl border border-stone-200 overflow-auto p-4"
+          style={{ backgroundColor: '#fafaf9' }}
+        >
+          {output ? (
+            <XmlTree doc={output} />
+          ) : (
+            <span className="text-stone-300">Formatted output will appear here...</span>
+          )}
+        </div>
       </div>
 
       {/* Ad placeholder */}
