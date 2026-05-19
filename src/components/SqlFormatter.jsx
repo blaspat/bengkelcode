@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { Database, Copy, Check, Trash2 } from 'lucide-react'
+import AdPlaceholder from './AdPlaceholder'
 
 const KEYWORDS = [
   'SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'NOT', 'IN', 'LIKE', 'BETWEEN',
