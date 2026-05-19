@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Wrench, Braces, FileCode, Clock, Regex, Lock, Key, Clock4, Database, FileText, QrCode } from 'lucide-react'
+import { Wrench, Braces, FileCode, Clock, Regex, Lock, Key, Clock4, Database, FileText, QrCode, GitCompare } from 'lucide-react'
 import JsonLinter from './components/JsonLinter'
 import XmlLinter from './components/XmlLinter'
 import CronMaker from './components/CronMaker'
@@ -11,6 +11,7 @@ import SqlFormatter from './components/SqlFormatter'
 import MarkdownPreview from './components/MarkdownPreview'
 import QrGenerator from './components/QrGenerator'
 import YamlConverter from './components/YamlConverter'
+import DiffTool from './components/DiffTool'
 import Footer from './components/Footer'
 
 const tabs = [
@@ -25,6 +26,7 @@ const tabs = [
   { id: 'markdown', label: 'Markdown Preview', icon: FileText },
   { id: 'qr', label: 'QR Generator', icon: QrCode },
   { id: 'yaml', label: 'YAML Converter', icon: Braces },
+  { id: 'diff', label: 'Diff Tool', icon: GitCompare },
 ]
 
 const STORAGE_KEY = 'bengkelcode-state-v1'
@@ -56,6 +58,7 @@ export default function App() {
   const [markdownState, setMarkdownState] = useState({ input: '', output: '' })
   const [qrState, setQrState] = useState({ input: '', size: 256 })
   const [yamlState, setYamlState] = useState({ input: '', output: '', error: null })
+  const [diffState, setDiffState] = useState({ left: '', right: '', result: null })
 
   useEffect(() => {
     const saved = loadState()
@@ -71,6 +74,7 @@ export default function App() {
       if (saved.markdown) setMarkdownState(saved.markdown)
       if (saved.qr) setQrState(saved.qr)
       if (saved.yaml) setYamlState(saved.yaml)
+      if (saved.diff) setDiffState(saved.diff)
     } else {
       setCronState({ fields: { minute: '*', hour: '*', day: '*', month: '*', weekday: '*' }, expression: '* * * * *' })
       setRegexState({ testString: '', pattern: '', flags: 'g' })
@@ -81,12 +85,13 @@ export default function App() {
       setMarkdownState({ input: '', output: '' })
       setQrState({ input: '', size: 256 })
       setYamlState({ input: '', output: '', error: null })
+      setDiffState({ left: '', right: '', result: null })
     }
   }, [])
 
   useEffect(() => {
-    saveState({ json: jsonState, xml: xmlState, cron: cronState, regex: regexState, encryption: encryptionState, jwt: jwtState, epoch: epochState, sql: sqlState, markdown: markdownState, qr: qrState, yaml: yamlState })
-  }, [jsonState, xmlState, cronState, yamlState])
+    saveState({ json: jsonState, xml: xmlState, cron: cronState, regex: regexState, encryption: encryptionState, jwt: jwtState, epoch: epochState, sql: sqlState, markdown: markdownState, qr: qrState, yaml: yamlState, diff: diffState })
+  }, [jsonState, xmlState, cronState, yamlState, diffState])
 
   const clearAll = useCallback(() => {
     setJsonState({ input: '', output: '', error: null })
@@ -100,6 +105,7 @@ export default function App() {
     setMarkdownState({ input: '', output: '' })
     setQrState({ input: '', size: 256 })
     setYamlState({ input: '', output: '', error: null })
+    setDiffState({ left: '', right: '', result: null })
   }, [])
 
   return (
@@ -144,6 +150,7 @@ export default function App() {
         {activeTab === 'markdown' && <MarkdownPreview state={markdownState} onStateChange={setMarkdownState} onClear={clearAll} />}
         {activeTab === 'qr' && qrState && <QrGenerator state={qrState} onStateChange={setQrState} onClear={clearAll} />}
         {activeTab === 'yaml' && <YamlConverter state={yamlState} onStateChange={setYamlState} onClear={clearAll} />}
+        {activeTab === 'diff' && <DiffTool state={diffState} onStateChange={setDiffState} onClear={clearAll} />}
       </main>
 
       <Footer />
