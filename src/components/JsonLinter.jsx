@@ -159,24 +159,96 @@ export default function JsonLinter({ state, onStateChange, onClear }) {
           )}
         </div>
 
-        {/* Compare left/right inputs */}
+        {/* Compare mode: side-by-side inputs + diff at bottom */}
         {mode === 'compare' ? (
-          <div className="flex flex-col gap-2 flex-1">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs uppercase font-medium" style={{ color: 'var(--text-muted)' }}>Left JSON</span>
-              <TextareaWithGutter
-                value={compareLeft}
-                onChange={e => setCompareLeft(e.target.value)}
-                placeholder={'{\n  "name": "Alice"\n}'}
-              />
+          <div className="flex flex-col gap-3 flex-1">
+            <div className="flex flex-col lg:flex-row gap-3 flex-1">
+              {/* Left JSON */}
+              <div className="flex-1 flex flex-col gap-1 min-h-32">
+                <span className="text-xs uppercase font-medium" style={{ color: 'var(--text-muted)' }}>Original JSON</span>
+                <TextareaWithGutter
+                  value={compareLeft}
+                  onChange={e => setCompareLeft(e.target.value)}
+                  placeholder={'{\n  "name": "Alice"\n}'}
+                />
+              </div>
+              {/* Right JSON */}
+              <div className="flex-1 flex flex-col gap-1 min-h-32">
+                <span className="text-xs uppercase font-medium" style={{ color: 'var(--text-muted)' }}>Changed JSON</span>
+                <TextareaWithGutter
+                  value={compareRight}
+                  onChange={e => setCompareRight(e.target.value)}
+                  placeholder={'{\n  "name": "Bob"\n}'}
+                />
+              </div>
             </div>
-            <div className="flex flex-col gap-1 flex-1">
-              <span className="text-xs uppercase font-medium" style={{ color: 'var(--text-muted)' }}>Right JSON</span>
-              <TextareaWithGutter
-                value={compareRight}
-                onChange={e => setCompareRight(e.target.value)}
-                placeholder={'{\n  "name": "Bob"\n}'}
-              />
+
+            {/* Diff result - full width below */}
+            <div className="flex flex-col gap-2 flex-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs uppercase font-medium" style={{ color: 'var(--text-muted)' }}>Diff Result</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={swapCompare}
+                    title="Swap left/right"
+                    className="p-2 rounded-lg"
+                    style={{ backgroundColor: 'var(--fab-bg)', color: 'var(--fab-text)', border: '1px solid var(--border)' }}
+                  >
+                    <ArrowLeftRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={handleCompare}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
+                    style={{ backgroundColor: '#F97316' }}
+                  >
+                    <Play className="w-3.5 h-3.5" />
+                    Compare
+                  </button>
+                  <button
+                    onClick={clearCompare}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+                    style={{ backgroundColor: 'var(--fab-bg)', color: 'var(--fab-text)', border: '1px solid var(--border)' }}
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+              <div
+                className="flex-1 rounded-2xl border overflow-auto p-4"
+                style={{ backgroundColor: 'var(--bg-subtle)', borderColor: 'var(--border)' }}
+              >
+                {compareResult === null ? (
+                  <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Enter two JSON objects and click Compare...</span>
+                ) : compareResult.length === 0 ? (
+                  <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Objects are identical</span>
+                ) : (
+                  <div className="flex flex-col gap-1">
+                    {compareResult.map((row, idx) => {
+                      if (row.type === 'error') {
+                        return (
+                          <div key={idx} className="text-sm font-mono px-3 py-2 rounded-lg" style={{ backgroundColor: '#fef2f2', color: '#991b1b' }}>
+                            {row.value}
+                          </div>
+                        )
+                      }
+                      return (
+                        <div key={idx} className="font-mono text-sm px-3 py-2 rounded-lg" style={
+                          row.type === 'added' ? { backgroundColor: '#dcfce7', color: '#166534' } :
+                          row.type === 'removed' ? { backgroundColor: '#fee2e2', color: '#991b1b' } :
+                          { backgroundColor: '#fef9c3', color: '#854d0e' }
+                        }>
+                          <span className="mr-2">{row.type === 'added' ? '+' : row.type === 'removed' ? '-' : '~'}</span>
+                          {row.type === 'changed' ? (
+                            <span>"{row.key}": {JSON.stringify(row.from)} → {JSON.stringify(row.to)}</span>
+                          ) : (
+                            <span>"{row.key}": {JSON.stringify(row.value)}</span>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ) : (
@@ -196,74 +268,7 @@ export default function JsonLinter({ state, onStateChange, onClear }) {
           </div>
         )}
 
-        {mode === 'compare' ? (
-          <div className="flex-1 flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs uppercase font-medium" style={{ color: 'var(--text-muted)' }}>JSON Diff</span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={swapCompare}
-                  title="Swap left/right"
-                  className="p-2 rounded-lg"
-                  style={{ backgroundColor: 'var(--fab-bg)', color: 'var(--fab-text)', border: '1px solid var(--border)' }}
-                >
-                  <ArrowLeftRight className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={handleCompare}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
-                  style={{ backgroundColor: '#F97316' }}
-                >
-                  <Play className="w-3.5 h-3.5" />
-                  Compare
-                </button>
-                <button
-                  onClick={clearCompare}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
-                  style={{ backgroundColor: 'var(--fab-bg)', color: 'var(--fab-text)', border: '1px solid var(--border)' }}
-                >
-                  Clear
-                </button>
-              </div>
-            </div>
-            <div
-              className="flex-1 rounded-2xl border overflow-auto p-4"
-              style={{ backgroundColor: 'var(--bg-subtle)', borderColor: 'var(--border)' }}
-            >
-              {compareResult === null ? (
-                <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Enter two JSON objects and click Compare...</span>
-              ) : compareResult.length === 0 ? (
-                <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Objects are identical</span>
-              ) : (
-                <div className="flex flex-col gap-1">
-                  {compareResult.map((row, idx) => {
-                    if (row.type === 'error') {
-                      return (
-                        <div key={idx} className="text-sm font-mono px-3 py-2 rounded-lg" style={{ backgroundColor: '#fef2f2', color: '#991b1b' }}>
-                          {row.value}
-                        </div>
-                      )
-                    }
-                    return (
-                      <div key={idx} className="font-mono text-sm px-3 py-2 rounded-lg" style={
-                        row.type === 'added' ? { backgroundColor: '#dcfce7', color: '#166534' } :
-                        row.type === 'removed' ? { backgroundColor: '#fee2e2', color: '#991b1b' } :
-                        { backgroundColor: '#fef9c3', color: '#854d0e' }
-                      }>
-                        <span className="mr-2">{row.type === 'added' ? '+' : row.type === 'removed' ? '-' : '~'}</span>
-                        {row.type === 'changed' ? (
-                          <span>"{row.key}": {JSON.stringify(row.from)} → {JSON.stringify(row.to)}</span>
-                        ) : (
-                          <span>"{row.key}": {JSON.stringify(row.value)}</span>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        ) : (
+        {mode === 'compare' ? null : (
           <div
             className="flex-1 rounded-2xl border border-stone-200 overflow-auto p-4"
             style={{ backgroundColor: output ? 'var(--bg-subtle)' : 'var(--bg-subtle)' }}
