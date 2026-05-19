@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Wrench, Braces, FileCode, Clock, Regex, Lock, Key, Clock4, Database, FileText, QrCode, GitCompare } from 'lucide-react'
+import { Wrench, Braces, FileCode, Clock, Regex, Lock, Key, Clock4, Database, FileText, QrCode, GitCompare, Sun, Moon } from 'lucide-react'
 import JsonLinter from './components/JsonLinter'
 import XmlLinter from './components/XmlLinter'
 import CronMaker from './components/CronMaker'
@@ -30,6 +30,46 @@ const tabs = [
 ]
 
 const STORAGE_KEY = 'bengkelcode-state-v1'
+const THEME_KEY = 'bengkelcode-theme-v1'
+
+const lightThemeVars = {
+  '--bg': '#ffffff',
+  '--bg-subtle': '#fafaf9',
+  '--bg-card': '#ffffff',
+  '--border': '#e7e5e4',
+  '--text': '#1c1917',
+  '--text-muted': '#78716c',
+  '--accent': '#F97316',
+  '--accent-hover': '#ea580c',
+  '--fab-bg': '#ffffff',
+  '--fab-text': '#57534e',
+  '--nav-inactive': '#78716c',
+  '--nav-hover': '#1c1917',
+  '--nav-hover-bg': '#f5f5f4',
+}
+
+const darkThemeVars = {
+  '--bg': '#0c0c0c',
+  '--bg-subtle': '#111111',
+  '--bg-card': '#1a1a1a',
+  '--border': '#2e2e2e',
+  '--text': '#fafaf9',
+  '--text-muted': '#a8a29e',
+  '--accent': '#F97316',
+  '--accent-hover': '#fb923c',
+  '--fab-bg': '#1a1a1a',
+  '--fab-text': '#a8a29e',
+  '--nav-inactive': '#a8a29e',
+  '--nav-hover': '#fafaf9',
+  '--nav-hover-bg': '#1a1a1a',
+}
+
+function applyTheme(theme) {
+  const root = document.documentElement
+  const vars = theme === 'dark' ? darkThemeVars : lightThemeVars
+  Object.entries(vars).forEach(([key, val]) => root.style.setProperty(key, val))
+  root.setAttribute('data-theme', theme)
+}
 
 function loadState() {
   try {
@@ -47,6 +87,7 @@ function saveState(state) {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('json')
+  const [theme, setTheme] = useState('light')
   const [jsonState, setJsonState] = useState({ input: '', output: '', error: null })
   const [xmlState, setXmlState] = useState({ input: '', output: '', error: null })
   const [cronState, setCronState] = useState(null)
@@ -59,6 +100,20 @@ export default function App() {
   const [qrState, setQrState] = useState({ input: '', size: 256 })
   const [yamlState, setYamlState] = useState({ input: '', output: '', error: null })
   const [diffState, setDiffState] = useState({ left: '', right: '', result: null })
+
+  // Init theme from localStorage before first paint
+  useEffect(() => {
+    const stored = localStorage.getItem(THEME_KEY)
+    const initial = stored === 'dark' || stored === 'light' ? stored : 'light'
+    setTheme(initial)
+    applyTheme(initial)
+  }, [])
+
+  // Persist theme changes
+  useEffect(() => {
+    localStorage.setItem(THEME_KEY, theme)
+    applyTheme(theme)
+  }, [theme])
 
   useEffect(() => {
     const saved = loadState()
@@ -108,15 +163,27 @@ export default function App() {
     setDiffState({ left: '', right: '', result: null })
   }, [])
 
+  const isDark = theme === 'dark'
+
   return (
-    <div className="min-h-svh flex flex-col">
-      <header className="flex items-center gap-3 px-6 py-4 border-b border-stone-200">
+    <div className="min-h-svh flex flex-col" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
+      <header className="flex items-center gap-3 px-6 py-4 border-b" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg)' }}>
         <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#F97316' }}>
           <Wrench className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h1 className="text-base font-semibold text-stone-900 leading-none">bengkelcode</h1>
-          <p className="text-xs text-stone-400 mt-0.5">workshop for developers</p>
+          <h1 className="text-base font-semibold leading-none" style={{ color: 'var(--text)' }}>bengkelcode</h1>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>workshop for developers</p>
+        </div>
+        <div className="ml-auto">
+          <button
+            onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}
+            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
+            style={{ backgroundColor: 'var(--fab-bg)', color: 'var(--fab-text)', border: '1px solid var(--border)' }}
+          >
+            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
         </div>
       </header>
 
@@ -128,9 +195,25 @@ export default function App() {
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap ${
               activeTab === id
                 ? 'text-white'
-                : 'text-stone-500 hover:text-stone-700 hover:bg-stone-100'
+                : ''
             }`}
-            style={activeTab === id ? { backgroundColor: '#F97316' } : {}}
+            style={
+              activeTab === id
+                ? { backgroundColor: '#F97316' }
+                : { color: 'var(--nav-inactive)', backgroundColor: 'transparent' }
+            }
+            onMouseEnter={e => {
+              if (activeTab !== id) {
+                e.currentTarget.style.color = 'var(--nav-hover)'
+                e.currentTarget.style.backgroundColor = 'var(--nav-hover-bg)'
+              }
+            }}
+            onMouseLeave={e => {
+              if (activeTab !== id) {
+                e.currentTarget.style.color = 'var(--nav-inactive)'
+                e.currentTarget.style.backgroundColor = 'transparent'
+              }
+            }}
           >
             <Icon className="w-4 h-4" />
             {label}
@@ -153,7 +236,7 @@ export default function App() {
         {activeTab === 'diff' && <DiffTool state={diffState} onStateChange={setDiffState} onClear={clearAll} />}
       </main>
 
-      <Footer />
+      <Footer theme={theme} />
     </div>
   )
 }
