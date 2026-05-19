@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
-import { Wrench, Braces, FileCode, Clock, Regex, Lock, Key, Clock4, Database, FileText, QrCode, GitCompare, Sun, Moon } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { Wrench, Braces, FileCode, Clock, Regex, Lock, Key, Clock4, Database, FileText, QrCode, GitCompare, Sun, Moon, Search, X } from 'lucide-react'
 import JsonLinter from './components/JsonLinter'
 import XmlLinter from './components/XmlLinter'
 import CronMaker from './components/CronMaker'
@@ -88,6 +88,9 @@ function saveState(state) {
 export default function App() {
   const [activeTab, setActiveTab] = useState('json')
   const [theme, setTheme] = useState('light')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showDropdown, setShowDropdown] = useState(false)
+  const searchRef = useRef(null)
   const [jsonState, setJsonState] = useState({ input: '', output: '', error: null })
   const [xmlState, setXmlState] = useState({ input: '', output: '', error: null })
   const [cronState, setCronState] = useState(null)
@@ -148,6 +151,49 @@ export default function App() {
     saveState({ json: jsonState, xml: xmlState, cron: cronState, regex: regexState, encryption: encryptionState, jwt: jwtState, epoch: epochState, sql: sqlState, markdown: markdownState, qr: qrState, yaml: yamlState, diff: diffState })
   }, [jsonState, xmlState, cronState, yamlState, diffState])
 
+  const filteredTabs = searchQuery.trim()
+    ? tabs.filter(t => t.label.toLowerCase().includes(searchQuery.toLowerCase()))
+    : []
+
+  const handleSearchChange = useCallback((e) => {
+    setSearchQuery(e.target.value)
+    setShowDropdown(true)
+  }, [])
+
+  const handleSearchSelect = useCallback((id) => {
+    setActiveTab(id)
+    setSearchQuery('')
+    setShowDropdown(false)
+  }, [])
+
+  const handleSearchClear = useCallback(() => {
+    setSearchQuery('')
+    setShowDropdown(false)
+  }, [])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  // Keyboard: close on Escape
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'Escape') {
+        setShowDropdown(false)
+        setSearchQuery('')
+      }
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [])
+
   const clearAll = useCallback(() => {
     setJsonState({ input: '', output: '', error: null })
     setXmlState({ input: '', output: '', error: null })
@@ -175,7 +221,51 @@ export default function App() {
           <h1 className="text-base font-semibold leading-none" style={{ color: 'var(--text)' }}>bengkelcode</h1>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>workshop for developers</p>
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          {/* Search */}
+          <div ref={searchRef} className="relative">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-muted)' }} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onFocus={() => searchQuery.trim() && setShowDropdown(true)}
+                placeholder="Search tools..."
+                className="w-48 h-9 pl-9 pr-8 rounded-xl text-sm bg-transparent border transition-colors"
+                style={{ color: 'var(--text)', borderColor: 'var(--border)', backgroundColor: 'var(--bg-subtle)' }}
+              />
+              {searchQuery && (
+                <button
+                  onClick={handleSearchClear}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded flex items-center justify-center"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            {/* Dropdown */}
+            {showDropdown && filteredTabs.length > 0 && (
+              <div
+                className="absolute top-full left-0 right-0 mt-1.5 rounded-xl border overflow-hidden z-50"
+                style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-card)' }}
+              >
+                {filteredTabs.map(({ id, label, icon: Icon }) => (
+                  <button
+                    key={id}
+                    onClick={() => handleSearchSelect(id)}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-left transition-colors hover:bg-stone-100"
+                    style={{ color: 'var(--text)' }}
+                  >
+                    <Icon className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--accent)' }} />
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           <button
             onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}
             title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
