@@ -73,9 +73,9 @@ export default function DiffTool({ state, onStateChange }) {
   }, [result])
 
   return (
-    <div className="mt-4 flex flex-col gap-4">
+    <div className="mt-4 flex flex-col flex-1 gap-3 min-h-0">
       {/* Controls */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-shrink-0">
         <button
           onClick={compare}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-medium"
@@ -100,15 +100,15 @@ export default function DiffTool({ state, onStateChange }) {
         </button>
       </div>
 
-      {/* Input panels */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* Input panels — fixed height, side by side */}
+      <div className="flex gap-3 flex-shrink-0" style={{ height: '220px' }}>
         <div className="flex flex-col gap-1">
           <span className="text-xs text-stone-400 uppercase font-medium">Original</span>
           <TextareaWithGutter
             value={left}
             onChange={e => onStateChange(s => ({ ...s, left: e.target.value }))}
             placeholder="Paste original text..."
-            style={{ height: '220px' }}
+            className="flex-1"
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -117,14 +117,14 @@ export default function DiffTool({ state, onStateChange }) {
             value={right}
             onChange={e => onStateChange(s => ({ ...s, right: e.target.value }))}
             placeholder="Paste changed text..."
-            style={{ height: '220px' }}
+            className="flex-1"
           />
         </div>
       </div>
 
-      {/* Diff output */}
+      {/* Diff output — fills remaining height */}
       {result && (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 flex-1 min-h-0 overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="text-xs text-stone-400 uppercase font-medium">Diff Output</span>
             <button
@@ -135,7 +135,7 @@ export default function DiffTool({ state, onStateChange }) {
               {copied ? 'Copied' : 'Copy diff as text'}
             </button>
           </div>
-          <div className="rounded-xl border border-stone-200 overflow-hidden">
+          <div className="rounded-xl border border-stone-200 overflow-auto flex-1">
             <table className="w-full text-sm font-mono">
               <tbody>
                 {result.map((row, idx) => (
