@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { FileText, Copy, Check, Trash2 } from 'lucide-react'
+import AdPlaceholder from './AdPlaceholder'
 
 // Simple markdown renderer (supports common patterns)
 function renderMarkdown(text) {
@@ -111,6 +112,11 @@ export default function MarkdownPreview({ state, onStateChange }) {
           ) : (
             <span className="text-stone-300">Preview will appear here...</span>
           )}
+        </div>
+
+        {/* Ad placeholder */}
+        <div className="mt-4">
+          <AdPlaceholder />
         </div>
       </div>
     </div>

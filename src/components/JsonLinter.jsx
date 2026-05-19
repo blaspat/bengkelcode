@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { Play, Copy, Trash2, Check } from 'lucide-react'
 import TextareaWithGutter from './TextareaWithGutter'
+import AdPlaceholder from './AdPlaceholder'
 
 export default function JsonLinter({ state, onStateChange, onClear }) {
   const { input, output, error } = state
@@ -70,6 +71,9 @@ export default function JsonLinter({ state, onStateChange, onClear }) {
           className="cursor-default"
         />
       </div>
+
+      {/* Ad placeholder */}
+      <AdPlaceholder />
 
       {/* FABs */}
       <div className="fixed bottom-6 right-6 flex flex-col gap-2">

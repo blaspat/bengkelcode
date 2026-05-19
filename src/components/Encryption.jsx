@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { Copy, Trash2, Check, Lock, Unlock } from 'lucide-react'
+import AdPlaceholder from './AdPlaceholder'
 
 const CIPHERS = [
   { id: 'base64', label: 'Base64', reversible: true },
@@ -171,6 +172,11 @@ export default function Encryption({ state, onStateChange }) {
             <span className="text-stone-300">Output will appear here...</span>
           )}
         </div>
+      </div>
+
+      {/* Ad placeholder */}
+      <div className="mt-4">
+        <AdPlaceholder />
       </div>
     </div>
   )

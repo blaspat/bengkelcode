@@ -93,10 +93,15 @@ export default function SqlFormatter({ state, onStateChange }) {
             <span className="text-stone-300">Formatted SQL will appear here...</span>
           )}
         </div>
+
+        {/* Ad placeholder */}
+        <div className="mt-4">
+          <AdPlaceholder />
+        </div>
       </div>
 
       {/* Actions */}
-      <div className="fixed bottom-6 right-6 flex flex-col gap-2">
+      <div className="flex gap-2">
         <button
           onClick={format}
           className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg text-white"
