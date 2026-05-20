@@ -140,7 +140,7 @@ export default function App() {
     try { return JSON.parse(localStorage.getItem(SIDEBAR_STORAGE_KEY))?.collapsed ?? false } catch { return false }
   })
   const [openCategories, setOpenCategories] = useState(() => {
-    try { const raw = localStorage.getItem(LAST_CAT_KEY); if (raw) return JSON.parse(raw) } catch {}
+    try { const raw = localStorage.getItem(LAST_CAT_KEY); if (raw) { const parsed = JSON.parse(raw); if (Array.isArray(parsed) && parsed.length > 0) return parsed } } catch {}
     return ['data', 'text', 'encode', 'time', 'code', 'utility']
   })
   const [activeTab, setActiveTab] = useState('json')
@@ -148,8 +148,8 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showDropdown, setShowDropdown] = useState(false)
   const [mobileCat, setMobileCat] = useState(() => {
-    try { const raw = localStorage.getItem(LAST_CAT_KEY); if (raw) return JSON.parse(raw)[0] } catch {}
-    return categories[0].id
+    try { const raw = localStorage.getItem(LAST_CAT_KEY); if (raw) { const parsed = JSON.parse(raw); if (Array.isArray(parsed) && parsed[0]) return parsed[0] } } catch {}
+    return 'data'
   })
   const searchRef = useRef(null)
   const [jsonState, setJsonState] = useState({ input: '', output: '', error: null })
