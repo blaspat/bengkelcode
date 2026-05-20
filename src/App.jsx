@@ -284,16 +284,17 @@ export default function App() {
     setSidebarCollapsed(prev => !prev)
   }, [])
 
-  // Close dropdown on outside click
+  // Close dropdown on outside click (desktop only)
   useEffect(() => {
     const handler = (e) => {
+      if (isMobile) return
       if (searchRef.current && !searchRef.current.contains(e.target)) {
         setShowDropdown(false)
       }
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [])
+  }, [isMobile])
 
   // Keyboard: close on Escape
   useEffect(() => {
