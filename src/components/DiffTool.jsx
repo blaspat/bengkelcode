@@ -101,23 +101,21 @@ export default function DiffTool({ state, onStateChange }) {
       </div>
 
       {/* Input panels — fixed height, side by side */}
-      <div className="flex gap-3 flex-shrink-0" style={{ height: '300px' }}>
-        <div className="flex flex-col gap-1">
+      <div className="flex gap-3 flex-shrink-0" style={{ height: '320px' }}>
+        <div className="flex flex-col gap-1 flex-1 min-h-0">
           <span className="text-xs text-stone-400 uppercase font-medium">Original</span>
           <TextareaWithGutter
             value={left}
             onChange={e => onStateChange(s => ({ ...s, left: e.target.value }))}
             placeholder="Paste original text..."
-            className="flex-1"
           />
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 flex-1 min-h-0">
           <span className="text-xs text-stone-400 uppercase font-medium">Changed</span>
           <TextareaWithGutter
             value={right}
             onChange={e => onStateChange(s => ({ ...s, right: e.target.value }))}
             placeholder="Paste changed text..."
-            className="flex-1"
           />
         </div>
       </div>
