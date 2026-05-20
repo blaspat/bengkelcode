@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Wrench, Braces, FileCode, Clock, Regex, Lock, Key, Clock4, Database, FileText, QrCode, GitCompare, Sun, Moon, Search, X, ChevronDown, ChevronRight, PanelLeftClose, PanelLeft, Code } from 'lucide-react'
 import JsonLinter from './components/JsonLinter'
+import JsonToJava from './components/JsonToJava'
+import HtmlUrlEncoder from './components/HtmlUrlEncoder'
 import XmlLinter from './components/XmlLinter'
 import CronMaker from './components/CronMaker'
 import RegexGenerator from './components/RegexGenerator'
@@ -21,6 +23,7 @@ const categories = [
     icon: Braces,
     tools: [
       { id: 'json', label: 'JSON Linter', icon: Braces },
+      { id: 'json-to-java', label: 'JSON → Java', icon: Braces },
       { id: 'xml', label: 'XML Linter', icon: FileCode },
       { id: 'yaml', label: 'YAML Converter', icon: Braces },
     ],
@@ -41,6 +44,7 @@ const categories = [
     icon: Lock,
     tools: [
       { id: 'encryption', label: 'Encryption', icon: Lock },
+      { id: 'html-url', label: 'HTML URL Encoder', icon: Lock },
     ],
   },
   {
@@ -164,6 +168,8 @@ export default function App() {
   const [qrState, setQrState] = useState({ input: '', size: 256 })
   const [yamlState, setYamlState] = useState({ input: '', output: '', error: null })
   const [diffState, setDiffState] = useState({ left: '', right: '', result: null })
+  const [jsonToJavaState, setJsonToJavaState] = useState({ input: '', output: null, error: null })
+  const [htmlUrlState, setHtmlUrlState] = useState({ mode: 'html-encode', input: '', output: null, error: null })
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
 
   // Init theme
@@ -216,6 +222,8 @@ export default function App() {
       if (saved.qr) setQrState(saved.qr)
       if (saved.yaml) setYamlState(saved.yaml)
       if (saved.diff) setDiffState(saved.diff)
+      if (saved.jsonToJava) setJsonToJavaState(saved.jsonToJava)
+      if (saved.htmlUrl) setHtmlUrlState(saved.htmlUrl)
     } else {
       setCronState({ fields: { minute: '*', hour: '*', day: '*', month: '*', weekday: '*' }, expression: '* * * * *' })
       setRegexState({ testString: '', pattern: '', flags: 'g' })
@@ -227,12 +235,14 @@ export default function App() {
       setQrState({ input: '', size: 256 })
       setYamlState({ input: '', output: '', error: null })
       setDiffState({ left: '', right: '', result: null })
+      setJsonToJavaState({ input: '', output: null, error: null })
+      setHtmlUrlState({ mode: 'html-encode', input: '', output: null, error: null })
     }
   }, [])
 
   // Persist state
   useEffect(() => {
-    saveState({ json: jsonState, xml: xmlState, cron: cronState, regex: regexState, encryption: encryptionState, jwt: jwtState, epoch: epochState, sql: sqlState, markdown: markdownState, qr: qrState, yaml: yamlState, diff: diffState })
+    saveState({ json: jsonState, xml: xmlState, cron: cronState, regex: regexState, encryption: encryptionState, jwt: jwtState, epoch: epochState, sql: sqlState, markdown: markdownState, qr: qrState, yaml: yamlState, diff: diffState, jsonToJava: jsonToJavaState, htmlUrl: htmlUrlState })
   }, [jsonState, xmlState, cronState, yamlState, diffState])
 
   const toggleCategory = useCallback((id) => {
@@ -275,6 +285,8 @@ export default function App() {
     setQrState({ input: '', size: 256 })
     setYamlState({ input: '', output: '', error: null })
     setDiffState({ left: '', right: '', result: null })
+    setJsonToJavaState({ input: '', output: null, error: null })
+    setHtmlUrlState({ mode: 'html-encode', input: '', output: null, error: null })
   }, [])
 
   const isDark = theme === 'dark'
@@ -545,6 +557,8 @@ export default function App() {
           {activeTab === 'qr' && qrState && <QrGenerator state={qrState} onStateChange={setQrState} onClear={clearAll} />}
           {activeTab === 'yaml' && <YamlConverter state={yamlState} onStateChange={setYamlState} onClear={clearAll} />}
           {activeTab === 'diff' && <DiffTool state={diffState} onStateChange={setDiffState} onClear={clearAll} />}
+          {activeTab === 'json-to-java' && <JsonToJava state={jsonToJavaState} onStateChange={setJsonToJavaState} onClear={clearAll} />}
+          {activeTab === 'html-url' && <HtmlUrlEncoder state={htmlUrlState} onStateChange={setHtmlUrlState} onClear={clearAll} />}
         </main>
       </div>
 
