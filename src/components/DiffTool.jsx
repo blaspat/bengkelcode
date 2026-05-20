@@ -101,7 +101,7 @@ export default function DiffTool({ state, onStateChange }) {
       </div>
 
       {/* Input panels — fixed height, side by side */}
-      <div className="flex gap-3 flex-shrink-0" style={{ height: '220px' }}>
+      <div className="flex gap-3 flex-shrink-0" style={{ height: '300px' }}>
         <div className="flex flex-col gap-1">
           <span className="text-xs text-stone-400 uppercase font-medium">Original</span>
           <TextareaWithGutter
