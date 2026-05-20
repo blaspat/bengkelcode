@@ -141,7 +141,7 @@ export default function App() {
   })
   const [openCategories, setOpenCategories] = useState(() => {
     try { const raw = localStorage.getItem(LAST_CAT_KEY); if (raw) return JSON.parse(raw) } catch {}
-    return [categories[0].id]
+    return ['data', 'text', 'encode', 'time', 'code', 'utility']
   })
   const [activeTab, setActiveTab] = useState('json')
   const [theme, setTheme] = useState('light')
