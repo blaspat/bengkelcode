@@ -109,15 +109,9 @@ export default function Footer() {
       <footer className="border-t border-stone-200 bg-stone-50 px-6 py-4">
         <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
           {shortHash && (
-            <a
-              href={`https://github.com/blaspat/bengkelcode/commit/${commitHash}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-stone-400 hover:text-stone-600 transition-colors font-mono"
-              title="View commit on GitHub"
-            >
+            <span className="text-xs text-stone-400 font-mono">
               {shortHash}
-            </a>
+            </span>
           )}
           <FooterLink icon={Info} label="About" onClick={() => setShowAbout(true)} />
           <FooterLink icon={Link2} label={copied ? 'Copied!' : 'Share Link'} onClick={handleShare} />
