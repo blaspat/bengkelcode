@@ -93,6 +93,9 @@ export default function Footer() {
   const [showPrivacy, setShowPrivacy] = useState(false)
   const [copied, setCopied] = useState(false)
 
+  const commitHash = typeof __GIT_COMMIT__ !== 'undefined' ? __GIT_COMMIT__ : null
+  const shortHash = commitHash ? commitHash.slice(0, 7) : null
+
   const handleShare = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href)
@@ -105,6 +108,17 @@ export default function Footer() {
     <>
       <footer className="border-t border-stone-200 bg-stone-50 px-6 py-4">
         <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+          {shortHash && (
+            <a
+              href={`https://github.com/blaspat/bengkelcode/commit/${commitHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-stone-400 hover:text-stone-600 transition-colors font-mono"
+              title="View commit on GitHub"
+            >
+              {shortHash}
+            </a>
+          )}
           <FooterLink icon={Info} label="About" onClick={() => setShowAbout(true)} />
           <FooterLink icon={Link2} label={copied ? 'Copied!' : 'Share Link'} onClick={handleShare} />
           <FooterLink icon={Shield} label="Privacy Policy" onClick={() => setShowPrivacy(true)} />

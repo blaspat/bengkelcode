@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { Play, Copy, Trash2, Check, Braces, ArrowLeftRight, Minus, GitCompare } from 'lucide-react'
+import { Play, Copy, Trash2, Check, Braces, ArrowLeftRight, Minus, GitCompare, ChevronsUpDown, ChevronsDownUp } from 'lucide-react'
 import TextareaWithGutter from './TextareaWithGutter'
 import AdPlaceholder from './AdPlaceholder'
 import CollapsibleTree from './CollapsibleTree'
@@ -27,14 +27,6 @@ function jsonDiff(leftObj, rightObj) {
   return result
 }
 
-function formatDiffHtml(diff) {
-  return diff.map(row => {
-    if (row.type === 'added') return `+ "${row.key}": ${JSON.stringify(row.value)}`
-    if (row.type === 'removed') return `- "${row.key}": ${JSON.stringify(row.value)}`
-    return `~ "${row.key}": ${JSON.stringify(row.from)} → ${JSON.stringify(row.to)}`
-  }).join('\n')
-}
-
 export default function JsonLinter({ state, onStateChange, onClear }) {
   const { input, output, error } = state
   const [copied, setCopied] = useState(false)
@@ -42,7 +34,7 @@ export default function JsonLinter({ state, onStateChange, onClear }) {
   const [compareLeft, setCompareLeft] = useState('')
   const [compareRight, setCompareRight] = useState('')
   const [compareResult, setCompareResult] = useState(null)
-  const [stringifyMode, setStringifyMode] = useState(false) // false=parsed view, true=string view
+  const [treeExpanded, setTreeExpanded] = useState(true)
 
   const setInput = useCallback((val) => {
     onStateChange(s => ({ ...s, input: typeof val === 'function' ? val(s.input) : val }))
@@ -71,13 +63,12 @@ export default function JsonLinter({ state, onStateChange, onClear }) {
     }
   }, [input, onStateChange])
 
-  const copy = useCallback(() => {
-    if (!output && !input) return
-    const text = stringifyMode ? input : JSON.stringify(output, null, 2)
-    navigator.clipboard.writeText(text)
+  const copyFormatted = useCallback(() => {
+    if (!output) return
+    navigator.clipboard.writeText(JSON.stringify(output, null, 2))
     setCopied(true)
     setTimeout(() => setCopied(false), 1500)
-  }, [output, input, stringifyMode])
+  }, [output])
 
   const clear = useCallback(() => {
     onStateChange(s => ({ input: '', output: null, error: null }))
@@ -122,7 +113,7 @@ export default function JsonLinter({ state, onStateChange, onClear }) {
 
   return (
     <div className="mt-4 flex flex-col lg:flex-row gap-4 h-[calc(100svh-200px)] lg:h-[calc(100svh-180px)]">
-      {/* Left panel */}
+      {/* Left panel — input */}
       <div className="flex-1 flex flex-col min-h-48 lg:min-h-0">
         {/* Mode selector */}
         <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -145,18 +136,6 @@ export default function JsonLinter({ state, onStateChange, onClear }) {
               {label}
             </button>
           ))}
-
-          {mode !== 'compare' && (
-            <button
-              onClick={() => setStringifyMode(s => !s)}
-              title={stringifyMode ? 'Show parsed view' : 'Show string view'}
-              className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
-              style={{ backgroundColor: 'var(--fab-bg)', color: 'var(--fab-text)', border: '1px solid var(--border)' }}
-            >
-              <ArrowLeftRight className="w-3.5 h-3.5" />
-              {stringifyMode ? 'Parsed' : 'String'}
-            </button>
-          )}
         </div>
 
         {/* Compare mode: side-by-side inputs + diff at bottom */}
@@ -260,33 +239,62 @@ export default function JsonLinter({ state, onStateChange, onClear }) {
         )}
       </div>
 
-      {/* Output */}
-      <div className="flex-1 flex flex-col min-h-48 lg:min-h-0">
-        {error && (
-          <div className="mb-2 px-4 py-2 rounded-xl text-sm" style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b' }}>
-            {error}
-          </div>
-        )}
+      {/* Right panel — tree view */}
+      {mode !== 'compare' && (
+        <div className="flex-1 flex flex-col min-h-48 lg:min-h-0">
+          {error && (
+            <div className="mb-2 px-4 py-2 rounded-xl text-sm" style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b' }}>
+              {error}
+            </div>
+          )}
 
-        {mode === 'compare' ? null : (
+          {/* Tree toolbar */}
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <button
+              onClick={() => setTreeExpanded(true)}
+              title="Expand all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+              style={{ backgroundColor: 'var(--fab-bg)', color: 'var(--fab-text)', border: '1px solid var(--border)' }}
+            >
+              <ChevronsUpDown className="w-3.5 h-3.5" />
+              Expand all
+            </button>
+            <button
+              onClick={() => setTreeExpanded(false)}
+              title="Collapse all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+              style={{ backgroundColor: 'var(--fab-bg)', color: 'var(--fab-text)', border: '1px solid var(--border)' }}
+            >
+              <ChevronsDownUp className="w-3.5 h-3.5" />
+              Collapse all
+            </button>
+            <button
+              onClick={copyFormatted}
+              disabled={!output}
+              title="Copy formatted JSON"
+              className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40"
+              style={{ backgroundColor: '#F97316', color: '#fff' }}
+            >
+              <Copy className="w-3.5 h-3.5" />
+              {copied ? 'Copied!' : 'Copy formatted'}
+            </button>
+          </div>
+
+          {/* Tree output */}
           <div
-            className="flex-1 rounded-2xl border border-stone-200 overflow-auto p-4"
-            style={{ backgroundColor: output ? 'var(--bg-subtle)' : 'var(--bg-subtle)' }}
+            className="flex-1 rounded-2xl border overflow-auto p-4"
+            style={{ backgroundColor: 'var(--bg-subtle)', borderColor: 'var(--border)' }}
           >
             {output ? (
-              stringifyMode ? (
-                <pre className="font-mono text-sm whitespace-pre-wrap break-all" style={{ color: 'var(--text)' }}>
-                  {JSON.stringify(output, null, 2)}
-                </pre>
-              ) : (
-                <CollapsibleTree data={output} />
-              )
+              <CollapsibleTree data={output} expanded={treeExpanded} />
             ) : (
-              <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Formatted output will appear here...</span>
+              <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                Parsed JSON tree will appear here...
+              </span>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Ad placeholder */}
       <AdPlaceholder />
@@ -299,7 +307,6 @@ export default function JsonLinter({ state, onStateChange, onClear }) {
             : mode === 'compact'
             ? { icon: Minus, label: 'Compact', onClick: handleCompact, primary: true }
             : { icon: Play, label: 'Lint', onClick: lint, primary: true },
-          { icon: Copy, label: 'Copy', onClick: copy, show: (output || input) },
           { icon: Trash2, label: 'Clear', onClick: mode === 'compare' ? clearCompare : clear },
         ].map(({ icon: Icon, label, onClick, primary, show }) =>
           show !== false && (
@@ -314,11 +321,7 @@ export default function JsonLinter({ state, onStateChange, onClear }) {
               }`}
               style={primary ? { backgroundColor: '#F97316' } : {}}
             >
-              {label === 'Copy' && copied ? (
-                <Check className="w-5 h-5" />
-              ) : (
-                <Icon className="w-5 h-5" />
-              )}
+              <Icon className="w-5 h-5" />
             </button>
           )
         )}
