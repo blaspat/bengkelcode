@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react'
 import { Play, Copy, Trash2, Check } from 'lucide-react'
 import TextareaWithGutter from './TextareaWithGutter'
-import AdPlaceholder from './AdPlaceholder'
 import XmlTree from './XmlTree'
 
 function formatXml(xmlString) {
@@ -84,9 +83,6 @@ export default function XmlLinter({ state, onStateChange }) {
           )}
         </div>
       </div>
-
-      {/* Ad placeholder */}
-      <AdPlaceholder />
 
       {/* FABs */}
       <div className="fixed bottom-6 right-6 flex flex-col gap-2">

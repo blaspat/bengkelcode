@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react'
 import { Key, AlertTriangle, Check, X } from 'lucide-react'
-import AdPlaceholder from './AdPlaceholder'
 
 function base64UrlDecode(str) {
   str = str.replace(/-/g, '+').replace(/_/g, '/')
@@ -136,10 +135,3 @@ export default function JwtDecoder({ state, onStateChange }) {
         </div>
       )}
 
-      {/* Ad placeholder */}
-      <div className="mt-4">
-        <AdPlaceholder />
-      </div>
-    </div>
-  )
-}

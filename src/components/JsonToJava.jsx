@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react'
 import { Play, Copy, Trash2, Check, Braces, ArrowLeftRight } from 'lucide-react'
 import TextareaWithGutter from './TextareaWithGutter'
-import AdPlaceholder from './AdPlaceholder'
 
 function toPascalCase(str) {
   return str
@@ -165,9 +164,6 @@ export default function JsonToJava({ state, onStateChange, onClear }) {
           )}
         </div>
       </div>
-
-      {/* Ad placeholder */}
-      <AdPlaceholder />
 
       {/* FABs */}
       <div className="fixed bottom-6 right-6 flex flex-col gap-2">

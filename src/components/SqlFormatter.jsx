@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react'
 import { Database, Copy, Check, Trash2 } from 'lucide-react'
-import AdPlaceholder from './AdPlaceholder'
 
 const KEYWORDS = [
   'SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'NOT', 'IN', 'LIKE', 'BETWEEN',
@@ -94,12 +93,6 @@ export default function SqlFormatter({ state, onStateChange }) {
             <span className="text-stone-300">Formatted SQL will appear here...</span>
           )}
         </div>
-
-        {/* Ad placeholder */}
-        <div className="mt-4">
-          <AdPlaceholder />
-        </div>
-      </div>
 
       {/* Actions */}
       <div className="flex gap-2">

@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react'
 import { Play, Copy, Trash2, Check, Lock } from 'lucide-react'
 import TextareaWithGutter from './TextareaWithGutter'
-import AdPlaceholder from './AdPlaceholder'
 
 const MODES = [
   { id: 'html-encode', label: 'HTML Encode' },
@@ -124,9 +123,6 @@ export default function HtmlUrlEncoder({ state, onStateChange, onClear }) {
           )}
         </div>
       </div>
-
-      {/* Ad placeholder */}
-      <AdPlaceholder />
 
       {/* FABs */}
       <div className="fixed bottom-6 right-6 flex flex-col gap-2">

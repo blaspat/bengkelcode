@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect } from 'react'
 import { Copy, Trash2, Check } from 'lucide-react'
 import cronstrue from 'cronstrue'
 import cronParser from 'cron-parser'
-import AdPlaceholder from './AdPlaceholder'
 
 const WEEKDAY_LABELS = { '*': 'Every', '0': 'Sun', '1': 'Mon', '2': 'Tue', '3': 'Wed', '4': 'Thu', '5': 'Fri', '6': 'Sat' }
 const MONTH_LABELS = { '*': 'Every', '1': 'Jan', '2': 'Feb', '3': 'Mar', '4': 'Apr', '5': 'May', '6': 'Jun', '7': 'Jul', '8': 'Aug', '9': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dec' }
@@ -290,11 +289,3 @@ export default function RegexGenerator({ state, onStateChange }) {
           )}
         </div>
 
-        {/* Ad placeholder */}
-        <div className="mt-4">
-          <AdPlaceholder />
-        </div>
-      </div>
-    </div>
-  )
-}

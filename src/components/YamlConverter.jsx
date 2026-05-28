@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react'
 import { ArrowLeftRight, Copy, Trash2, Check } from 'lucide-react'
 import TextareaWithGutter from './TextareaWithGutter'
-import AdPlaceholder from './AdPlaceholder'
 import yaml from 'js-yaml'
 
 const TYPES = ['YAML', 'JSON', 'Properties']
@@ -187,11 +186,6 @@ export default function YamlConverter({ state, onStateChange, onClear }) {
           placeholder={error ? '' : 'Converted output will appear here...'}
           className="cursor-default"
         />
-      </div>
-
-      {/* Ad placeholder */}
-      <div className="flex flex-col justify-end pb-4">
-        <AdPlaceholder />
       </div>
 
       {/* FABs */}
