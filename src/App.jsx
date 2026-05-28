@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Wrench, Braces, FileCode, Clock, Regex, Lock, Key, Clock4, Database, FileText, QrCode, GitCompare, Sun, Moon, Search, X, ChevronDown, ChevronRight, PanelLeftClose, PanelLeft, Code } from 'lucide-react'
+import { Wrench, Braces, FileCode, Clock, Regex, Lock, Key, Clock4, Database, FileText, QrCode, GitCompare, Sun, Moon, Search, X, ChevronDown, ChevronRight, PanelLeftClose, PanelLeft, Code, DollarSign } from 'lucide-react'
 import JsonLinter from './components/JsonLinter'
 import JsonToJava from './components/JsonToJava'
 import HtmlUrlEncoder from './components/HtmlUrlEncoder'
@@ -14,6 +14,7 @@ import MarkdownPreview from './components/MarkdownPreview'
 import QrGenerator from './components/QrGenerator'
 import YamlConverter from './components/YamlConverter'
 import DiffTool from './components/DiffTool'
+import MeetingCostCalculator from './components/MeetingCostCalculator'
 import Footer from './components/Footer'
 
 const categories = [
@@ -71,6 +72,7 @@ const categories = [
     icon: Wrench,
     tools: [
       { id: 'qr', label: 'QR Generator', icon: QrCode },
+      { id: 'meeting-cost', label: 'Meeting Cost Calculator', icon: DollarSign },
     ],
   },
 ]
@@ -170,6 +172,7 @@ export default function App() {
   const [diffState, setDiffState] = useState({ left: '', right: '', result: null })
   const [jsonToJavaState, setJsonToJavaState] = useState({ input: '', output: null, error: null })
   const [htmlUrlState, setHtmlUrlState] = useState({ mode: 'html-encode', input: '', output: null, error: null })
+  const [meetingCostState, setMeetingCostState] = useState({ attendees: '', hourlyRate: '', duration: '', result: null })
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
 
   // Init theme
@@ -287,6 +290,7 @@ export default function App() {
     setDiffState({ left: '', right: '', result: null })
     setJsonToJavaState({ input: '', output: null, error: null })
     setHtmlUrlState({ mode: 'html-encode', input: '', output: null, error: null })
+    setMeetingCostState({ attendees: '', hourlyRate: '', duration: '', result: null })
   }, [])
 
   const isDark = theme === 'dark'
@@ -559,6 +563,7 @@ export default function App() {
           {activeTab === 'diff' && <DiffTool state={diffState} onStateChange={setDiffState} onClear={clearAll} />}
           {activeTab === 'json-to-java' && <JsonToJava state={jsonToJavaState} onStateChange={setJsonToJavaState} onClear={clearAll} />}
           {activeTab === 'html-url' && <HtmlUrlEncoder state={htmlUrlState} onStateChange={setHtmlUrlState} onClear={clearAll} />}
+          {activeTab === 'meeting-cost' && <MeetingCostCalculator state={meetingCostState} onStateChange={setMeetingCostState} onClear={clearAll} />}
         </main>
       </div>
 

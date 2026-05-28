@@ -1,7 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <rect width="32" height="32" rx="6" fill="#F97316"/>
-  <path d="M21 7L13 15M21 7L25 11M21 7L17 11" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <path d="M16 11L9 18" stroke="white" stroke-width="2" stroke-linecap="round"/>
-  <path d="M9 18L6 21M9 18L12 21" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <text x="16" y="28" font-family="monospace" font-size="8" font-weight="bold" fill="white" text-anchor="middle">&lt;/&gt;</text>
+  <!-- Wrench: diagonal (bottom-left to top-right) -->
+  <path d="M9 23L22 10" stroke="white" stroke-width="2.4" stroke-linecap="round"/>
+  <!-- Wrench head: fork at top-right -->
+  <path d="M22 10L25 7M22 10L19 7" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Wrench handle end: small ring at bottom-left -->
+  <circle cx="9" cy="23" r="2" fill="white"/>
+  <!-- { bracket: right side -->
+  <path d="M22 11C19.5 11 18 12.5 18 14L18 18C18 19.5 17 21 15 22C17 23 18 24.5 18 26L18 27.5C18 28.5 19 29 20.5 29C22 29 23 28 23 26.5L23 25" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  <!-- } bracket: left side -->
+  <path d="M10 11C12.5 11 14 12.5 14 14L14 18C14 19.5 15 21 17 22C15 23 14 24.5 14 26L14 27.5C14 28.5 13 29 11.5 29C10 29 9 28 9 26.5L9 25" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
 </svg>
