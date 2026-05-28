@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link2, Mail, X, Info, Shield } from 'lucide-react'
+import { Link2, MessageCircle, X, Info, Shield } from 'lucide-react'
 
 function AboutModal({ onClose }) {
   useEffect(() => {
@@ -116,7 +116,8 @@ export default function Footer() {
           <FooterLink icon={Info} label="About" onClick={() => setShowAbout(true)} />
           <FooterLink icon={Link2} label={copied ? 'Copied!' : 'Share Link'} onClick={handleShare} />
           <FooterLink icon={Shield} label="Privacy Policy" onClick={() => setShowPrivacy(true)} />
-          <FooterLink icon={Mail} label="Contact" href="mailto:contact@bengkelcode.com" />
+          <FooterLink icon={MessageCircle} label="Discussions" href="https://github.com/blaspat/bengkelcode/discussions" />
+          <FooterLink icon={Link2} label="Contribute" href="https://github.com/blaspat/bengkelcode" />
         </div>
       </footer>
       {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
