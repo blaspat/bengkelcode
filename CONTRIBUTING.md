@@ -64,5 +64,4 @@ chore: tooling, dependencies, config
 
 - The app supports light and dark themes via CSS variables
 - All tool states are persisted to `localStorage` under `bengkelcode-state-v1`
-- Dev server is configured to allow host `bengkel.spica.ooguy.com`
 - No backend — fully client-side

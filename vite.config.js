@@ -10,7 +10,4 @@ export default defineConfig({
   define: {
     __GIT_COMMIT__: JSON.stringify(gitCommit),
   },
-  server: {
-    allowedHosts: ['bengkel.spica.ooguy.com'],
-  },
 })
