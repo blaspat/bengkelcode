@@ -12,6 +12,7 @@ import EpochConverter from './components/EpochConverter'
 import SqlFormatter from './components/SqlFormatter'
 import MarkdownPreview from './components/MarkdownPreview'
 import QrGenerator from './components/QrGenerator'
+import FaviconGenerator from './components/FaviconGenerator'
 import YamlConverter from './components/YamlConverter'
 import DiffTool from './components/DiffTool'
 import MeetingCostCalculator from './components/MeetingCostCalculator'
@@ -72,6 +73,7 @@ const categories = [
     icon: Wrench,
     tools: [
       { id: 'qr', label: 'QR Generator', icon: QrCode },
+      { id: 'favicon', label: 'Favicon Generator', icon: Wrench },
       { id: 'meeting-cost', label: 'Meeting Cost Calculator', icon: DollarSign },
     ],
   },
@@ -173,6 +175,7 @@ export default function App() {
   const [jsonToJavaState, setJsonToJavaState] = useState({ input: '', output: null, error: null })
   const [htmlUrlState, setHtmlUrlState] = useState({ mode: 'html-encode', input: '', output: null, error: null })
   const [meetingCostState, setMeetingCostState] = useState({ attendees: '', hourlyRate: '', duration: '', result: null })
+  const [faviconState, setFaviconState] = useState({ inputType: 'emoji', emoji: '⚙️', imageData: '', bgColor: '#F97316', shape: 'rounded' })
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
 
   // Init theme
@@ -227,6 +230,7 @@ export default function App() {
       if (saved.diff) setDiffState(saved.diff)
       if (saved.jsonToJava) setJsonToJavaState(saved.jsonToJava)
       if (saved.htmlUrl) setHtmlUrlState(saved.htmlUrl)
+      if (saved.favicon) setFaviconState(saved.favicon)
     } else {
       setCronState({ fields: { minute: '*', hour: '*', day: '*', month: '*', weekday: '*' }, expression: '* * * * *' })
       setRegexState({ testString: '', pattern: '', flags: 'g' })
@@ -245,8 +249,8 @@ export default function App() {
 
   // Persist state
   useEffect(() => {
-    saveState({ json: jsonState, xml: xmlState, cron: cronState, regex: regexState, encryption: encryptionState, jwt: jwtState, epoch: epochState, sql: sqlState, markdown: markdownState, qr: qrState, yaml: yamlState, diff: diffState, jsonToJava: jsonToJavaState, htmlUrl: htmlUrlState })
-  }, [jsonState, xmlState, cronState, regexState, encryptionState, jwtState, epochState, sqlState, markdownState, qrState, yamlState, diffState, jsonToJavaState, htmlUrlState])
+    saveState({ json: jsonState, xml: xmlState, cron: cronState, regex: regexState, encryption: encryptionState, jwt: jwtState, epoch: epochState, sql: sqlState, markdown: markdownState, qr: qrState, yaml: yamlState, diff: diffState, jsonToJava: jsonToJavaState, htmlUrl: htmlUrlState, favicon: faviconState })
+  }, [jsonState, xmlState, cronState, regexState, encryptionState, jwtState, epochState, sqlState, markdownState, qrState, yamlState, diffState, jsonToJavaState, htmlUrlState, faviconState])
 
   const toggleCategory = useCallback((id) => {
     setOpenCategories(prev =>
@@ -291,6 +295,7 @@ export default function App() {
     setJsonToJavaState({ input: '', output: null, error: null })
     setHtmlUrlState({ mode: 'html-encode', input: '', output: null, error: null })
     setMeetingCostState({ attendees: '', hourlyRate: '', duration: '', result: null })
+    setFaviconState({ inputType: 'emoji', emoji: '⚙️', imageData: '', bgColor: '#F97316', shape: 'rounded' })
   }, [])
 
   const isDark = theme === 'dark'
@@ -564,6 +569,7 @@ export default function App() {
           {activeTab === 'json-to-java' && <JsonToJava state={jsonToJavaState} onStateChange={setJsonToJavaState} onClear={clearAll} />}
           {activeTab === 'html-url' && <HtmlUrlEncoder state={htmlUrlState} onStateChange={setHtmlUrlState} onClear={clearAll} />}
           {activeTab === 'meeting-cost' && <MeetingCostCalculator state={meetingCostState} onStateChange={setMeetingCostState} onClear={clearAll} />}
+          {activeTab === 'favicon' && <FaviconGenerator state={faviconState} onStateChange={setFaviconState} onClear={clearAll} />}
         </main>
       </div>
 
