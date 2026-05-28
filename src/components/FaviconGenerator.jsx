@@ -7,58 +7,67 @@ const DEFAULT_SHAPE = 'rounded'
 
 function renderToCanvas(text, inputType, imageData, size, bgColor, shape) {
   return new Promise((resolve) => {
-    const canvas = document.createElement('canvas')
-    canvas.width = size
-    canvas.height = size
-    const ctx = canvas.getContext('2d')
+    try {
+      const canvas = document.createElement('canvas')
+      canvas.width = size
+      canvas.height = size
+      const ctx = canvas.getContext('2d')
+      if (!ctx) { resolve(null); return }
 
-    // Background
-    if (shape === 'circle') {
-      ctx.fillStyle = bgColor
-      ctx.beginPath()
-      ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2)
-      ctx.fill()
-    } else if (shape === 'square') {
-      ctx.fillStyle = bgColor
-      ctx.fillRect(0, 0, size, size)
-    } else {
-      // rounded
-      ctx.fillStyle = bgColor
-      const r = size * 0.22
-      ctx.beginPath()
-      ctx.moveTo(r, 0)
-      ctx.lineTo(size - r, 0)
-      ctx.quadraticCurveTo(size, 0, size, r)
-      ctx.lineTo(size, size - r)
-      ctx.quadraticCurveTo(size, size, size - r, size)
-      ctx.lineTo(r, size)
-      ctx.quadraticCurveTo(0, size, 0, size - r)
-      ctx.lineTo(0, r)
-      ctx.quadraticCurveTo(0, 0, r, 0)
-      ctx.closePath()
-      ctx.fill()
-    }
-
-    // Content
-    if (inputType === 'emoji' && text) {
-      ctx.fillStyle = '#ffffff'
-      ctx.font = `${Math.floor(size * 0.65)}px serif`
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      ctx.fillText(text, size / 2, size / 2 + size * 0.03)
-    } else if (inputType === 'image' && imageData) {
-      const img = new Image()
-      img.onload = () => {
-        const pad = Math.floor(size * 0.1)
-        const imgSize = size - pad * 2
-        ctx.drawImage(img, pad, pad, imgSize, imgSize)
-        resolve(canvas)
+      // Background
+      if (shape === 'circle') {
+        ctx.fillStyle = bgColor
+        ctx.beginPath()
+        ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2)
+        ctx.fill()
+      } else if (shape === 'square') {
+        ctx.fillStyle = bgColor
+        ctx.fillRect(0, 0, size, size)
+      } else {
+        // rounded
+        ctx.fillStyle = bgColor
+        const r = size * 0.22
+        ctx.beginPath()
+        ctx.moveTo(r, 0)
+        ctx.lineTo(size - r, 0)
+        ctx.quadraticCurveTo(size, 0, size, r)
+        ctx.lineTo(size, size - r)
+        ctx.quadraticCurveTo(size, size, size - r, size)
+        ctx.lineTo(r, size)
+        ctx.quadraticCurveTo(0, size, 0, size - r)
+        ctx.lineTo(0, r)
+        ctx.quadraticCurveTo(0, 0, r, 0)
+        ctx.closePath()
+        ctx.fill()
       }
-      img.onerror = () => resolve(canvas)
-      img.src = imageData
-      return
+
+      // Content
+      if (inputType === 'emoji' && text) {
+        ctx.fillStyle = '#ffffff'
+        ctx.font = `${Math.floor(size * 0.65)}px serif`
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(text, size / 2, size / 2 + size * 0.03)
+      } else if (inputType === 'image' && imageData) {
+        const img = new Image()
+        img.onload = () => {
+          try {
+            const pad = Math.floor(size * 0.1)
+            const imgSize = size - pad * 2
+            ctx.drawImage(img, pad, pad, imgSize, imgSize)
+            resolve(canvas)
+          } catch {
+            resolve(canvas)
+          }
+        }
+        img.onerror = () => resolve(canvas)
+        img.src = imageData
+        return
+      }
+      resolve(canvas)
+    } catch (e) {
+      resolve(null)
     }
-    resolve(canvas)
   })
 }
 
@@ -121,14 +130,26 @@ export default function FaviconGenerator({ state, onStateChange, onClear }) {
 
     // Generate preview (32px canvas)
     const canvas = await renderToCanvas(emoji, inputType, imageData, size, bgColor, shape)
-    const dataUrl = canvas.toDataURL('image/png')
-    setPreviewDataUrl(dataUrl)
+    if (canvas) {
+      try {
+        const dataUrl = canvas.toDataURL('image/png')
+        setPreviewDataUrl(dataUrl)
+      } catch (e) {
+        // canvas may be tainted
+      }
+    }
 
     // Generate PNGs at standard favicon sizes
     const pngs = {}
     for (const s of SIZES) {
       const c = await renderToCanvas(emoji, inputType, imageData, s, bgColor, shape)
-      pngs[s] = c.toDataURL('image/png')
+      if (c) {
+        try {
+          pngs[s] = c.toDataURL('image/png')
+        } catch (e) {
+          // canvas may be tainted
+        }
+      }
     }
     setPngDataUrls(pngs)
 
@@ -138,7 +159,10 @@ export default function FaviconGenerator({ state, onStateChange, onClear }) {
   }, [emoji, inputType, imageData, bgColor, shape])
 
   useEffect(() => {
-    generate()
+    generate().catch(err => {
+      console.error('FaviconGenerator generate error:', err)
+      setError('Failed to generate preview')
+    })
   }, [generate])
 
   const handleEmojiChange = useCallback((val) => {
