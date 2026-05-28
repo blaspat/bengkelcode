@@ -113,3 +113,7 @@ export default function MarkdownPreview({ state, onStateChange }) {
           )}
         </div>
 
+      </div>
+    </div>
+  )
+}

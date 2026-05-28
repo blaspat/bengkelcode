@@ -94,6 +94,8 @@ export default function SqlFormatter({ state, onStateChange }) {
           )}
         </div>
 
+      </div>
+
       {/* Actions */}
       <div className="flex gap-2">
         <button

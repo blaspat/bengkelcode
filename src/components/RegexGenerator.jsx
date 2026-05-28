@@ -289,3 +289,7 @@ export default function RegexGenerator({ state, onStateChange }) {
           )}
         </div>
 
+      </div>
+    </div>
+  )
+}

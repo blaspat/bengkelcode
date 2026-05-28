@@ -135,3 +135,6 @@ export default function JwtDecoder({ state, onStateChange }) {
         </div>
       )}
 
+    </div>
+  )
+}

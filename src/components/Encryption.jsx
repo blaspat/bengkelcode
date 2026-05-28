@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react'
 import { Copy, Trash2, Check, Lock, Unlock } from 'lucide-react'
-
 const CIPHERS = [
   { id: 'base64', label: 'Base64', reversible: true },
   { id: 'sha1', label: 'SHA-1', reversible: false },
@@ -290,3 +289,6 @@ export default function Encryption({ state, onStateChange }) {
         </div>
       </div>
 
+    </div>
+  )
+}
