@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { Copy, Trash2, Check, Upload, Image, Download } from 'lucide-react'
+import { Copy, Trash2, Check, Upload, Image as ImageIcon, Download } from 'lucide-react'
 
 const SIZES = [16, 32, 48]
 const DEFAULT_BG = '#F97316'
@@ -251,7 +251,7 @@ export default function FaviconGenerator({ state, onStateChange, onClear }) {
                   : { backgroundColor: 'var(--fab-bg)', color: 'var(--fab-text)', border: '1px solid var(--border)' }
                 }
               >
-                {type === 'emoji' ? '🔤 Emoji' : <><Image className="w-3.5 h-3.5" /> Image</>}
+                {type === 'emoji' ? '🔤 Emoji' : <><ImageIcon className="w-3.5 h-3.5" /> Image</>}
               </button>
             ))}
           </div>
