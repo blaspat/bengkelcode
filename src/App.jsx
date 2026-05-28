@@ -243,7 +243,7 @@ export default function App() {
   // Persist state
   useEffect(() => {
     saveState({ json: jsonState, xml: xmlState, cron: cronState, regex: regexState, encryption: encryptionState, jwt: jwtState, epoch: epochState, sql: sqlState, markdown: markdownState, qr: qrState, yaml: yamlState, diff: diffState, jsonToJava: jsonToJavaState, htmlUrl: htmlUrlState })
-  }, [jsonState, xmlState, cronState, yamlState, diffState])
+  }, [jsonState, xmlState, cronState, regexState, encryptionState, jwtState, epochState, sqlState, markdownState, qrState, yamlState, diffState, jsonToJavaState, htmlUrlState])
 
   const toggleCategory = useCallback((id) => {
     setOpenCategories(prev =>

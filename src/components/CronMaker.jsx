@@ -113,7 +113,7 @@ export default function CronMaker({ state, onStateChange }) {
   // Sync when state changes (e.g., from localStorage load or preset)
   useEffect(() => {
     updateFromExpression(initialExpression)
-  }, [initialExpression]) // eslint-disable-line
+  }, [initialExpression])  
 
   function updateFromExpression(expr) {
     const parsed = parseCronExpression(expr)
@@ -143,7 +143,7 @@ export default function CronMaker({ state, onStateChange }) {
     const val = e.target.value
     setExpression(val)
     updateFromExpression(val)
-  }, []) // eslint-disable-line
+  }, [])  
 
   const handlePreset = useCallback((expr) => {
     setExpression(expr)
@@ -167,7 +167,7 @@ export default function CronMaker({ state, onStateChange }) {
       setNextRuns([])
     }
     onStateChange({ fields: newFields, expression: newExpr })
-  }, [fields, onStateChange]) // eslint-disable-line
+  }, [fields, onStateChange])  
 
   const copy = useCallback(() => {
     navigator.clipboard.writeText(expression)
