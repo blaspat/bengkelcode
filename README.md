@@ -2,7 +2,7 @@
 
 > A browser-based developer workshop — a collection of tools that run entirely locally in your browser, with no data sent anywhere.
 
-[Visit bengkelcode.com](https://bengkelcode.com)
+[Visit bengkelcode](https://bengkelcode.vercel.app)
 
 ## Tools
 
@@ -81,3 +81,7 @@ pnpm preview  # Preview production build
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, project structure, and how to add a tool.
+
+## License
+
+[MIT](LICENSE)
