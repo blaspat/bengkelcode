@@ -1,34 +1,73 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, Component } from 'react'
 import { GitCompare, ArrowLeftRight, Trash2, Copy, Check } from 'lucide-react'
 import TextareaWithGutter from './TextareaWithGutter'
 
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false, errorMessage: '' }
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, errorMessage: error.message || 'Diff computation failed. Try a smaller input.' }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <strong>⚠️ {this.state.errorMessage}</strong>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
+const MAX_LINES_WARN = 2000
+
 function computeDiff(left, right) {
+  if (left == null || right == null) return []
+
   const leftLines = left.split('\n')
   const rightLines = right.split('\n')
-  const result = []
-  const maxLen = Math.max(leftLines.length, rightLines.length)
 
-  // Simple LCS-based line diff
-  const dp = Array.from({ length: leftLines.length + 1 }, () => new Array(rightLines.length + 1).fill(0))
-  for (let i = 1; i <= leftLines.length; i++) {
-    for (let j = 1; j <= rightLines.length; j++) {
-      if (leftLines[i - 1] === rightLines[j - 1]) {
-        dp[i][j] = dp[i - 1][j - 1] + 1
-      } else {
-        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1])
-      }
+  // Guard against O(n²) memory explosion on large inputs
+  if (leftLines.length > MAX_LINES_WARN || rightLines.length > MAX_LINES_WARN) {
+    throw new Error(`Input too large (${Math.max(leftLines.length, rightLines.length)} lines). Maximum allowed is ${MAX_LINES_WARN} lines. Please split the input into smaller chunks.`)
+  }
+
+  const result = []
+
+  // Hunt-McIlroy LCS-based diff — O(n) space instead of O(n²)
+  // Build diagonal map of LCS lengths
+  const diagonals = { 0: { i: 0, j: 0 } }
+  let i = 0
+  let j = 0
+  for (let l = 0; l < leftLines.length + rightLines.length; l++) {
+    // Extend along current diagonal
+    while (i < leftLines.length && j < rightLines.length && leftLines[i] === rightLines[j]) {
+      i++; j++
+    }
+    diagonals[j - i] = { i, j }
+    if (i >= leftLines.length && j >= rightLines.length) break
+    // Advance
+    if (j < rightLines.length && (i >= leftLines.length || (diagonals[j - i + 1] && diagonals[j - i + 1].i <= i + 1))) {
+      j++
+    } else {
+      i++
     }
   }
 
   // Backtrack to build aligned diff
-  let i = leftLines.length
-  let j = rightLines.length
+  i = leftLines.length
+  j = rightLines.length
   const aligned = []
   while (i > 0 || j > 0) {
     if (i > 0 && j > 0 && leftLines[i - 1] === rightLines[j - 1]) {
       aligned.unshift({ type: 'same', left: leftLines[i - 1], right: rightLines[j - 1], lineLeft: i, lineRight: j })
       i--; j--
-    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+    } else if (j > 0 && (i === 0 || (diagonals[j - i - 1] && diagonals[j - i - 1].i >= i))) {
       aligned.unshift({ type: 'added', left: null, right: rightLines[j - 1], lineLeft: null, lineRight: j })
       j--
     } else {
@@ -62,7 +101,7 @@ export default function DiffTool({ state, onStateChange }) {
   }, [onStateChange])
 
   const clear = useCallback(() => {
-    onStateChange({ left: '', right: '', result: null })
+    onStateChange(s => ({ left: '', right: '', result: null }))
   }, [onStateChange])
 
   const copyDiff = useCallback(() => {
@@ -122,7 +161,8 @@ export default function DiffTool({ state, onStateChange }) {
 
       {/* Diff output — fills remaining height */}
       {result && (
-        <div className="flex flex-col gap-2 flex-1 min-h-0 overflow-hidden">
+        <ErrorBoundary>
+          <div className="flex flex-col gap-2 flex-1 min-h-0 overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="text-xs text-stone-400 uppercase font-medium">Diff Output</span>
             <button
@@ -170,6 +210,7 @@ export default function DiffTool({ state, onStateChange }) {
             </table>
           </div>
         </div>
+        </ErrorBoundary>
       )}
     </div>
   )
