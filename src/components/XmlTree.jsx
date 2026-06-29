@@ -1,9 +1,5 @@
 import { useState } from 'react'
 
-function getChildCount(node) {
-  return node.childNodes.length
-}
-
 function XmlNode({ node }) {
   const [collapsed, setCollapsed] = useState(false)
 

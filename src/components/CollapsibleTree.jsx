@@ -33,9 +33,6 @@ function ValueNode({ data }) {
 function TreeNode({ data, path, expanded }) {
   const [localExpanded, setLocalExpanded] = useState(true)
   const isExpanded = expanded !== undefined ? expanded : localExpanded
-  const toggleExpanded = expanded !== undefined
-    ? () => {} // controlled — no-op
-    : () => setLocalExpanded(e => !e)
 
   if (!isExpanded) {
     const bracket = isArray(data) ? '[...]' : '{...}'

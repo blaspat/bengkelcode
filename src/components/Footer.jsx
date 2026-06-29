@@ -38,7 +38,7 @@ function AboutModal({ onClose }) {
   )
 }
 
-function FooterLink({ icon: Icon, label, href, onClick, children }) {
+function FooterLink({ icon: Icon, label, href, onClick }) {
   const base = "flex items-center gap-1.5 text-xs font-medium text-stone-400 hover:text-stone-600 transition-colors"
   if (href) {
     return (
@@ -96,12 +96,12 @@ export default function Footer() {
   const commitHash = typeof __GIT_COMMIT__ !== 'undefined' ? __GIT_COMMIT__ : null
   const shortHash = commitHash ? commitHash.slice(0, 7) : null
 
-  const handleShare = async () => {
+  const handleShare = () => {
     try {
-      await navigator.clipboard.writeText(window.location.href)
+      navigator.clipboard.writeText(window.location.href)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
-    } catch {}
+    } catch { /* clipboard API not available */ }
   }
 
   return (

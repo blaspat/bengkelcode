@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react'
-import { Play, Copy, Trash2, Check, Lock } from 'lucide-react'
+import { useCallback, useState } from 'react'
+import { Play, Copy, Trash2, Check } from 'lucide-react'
 import TextareaWithGutter from './TextareaWithGutter'
 
 const MODES = [
@@ -37,7 +37,7 @@ function urlDecode(text) {
   return decodeURIComponent(text)
 }
 
-export default function HtmlUrlEncoder({ state, onStateChange, onClear }) {
+export default function HtmlUrlEncoder({ state, onStateChange }) {
   const { mode, input, output, error } = state
   const [copied, setCopied] = useState(false)
   const selectedMode = MODES.find(m => m.id === mode) || MODES[0]
@@ -139,9 +139,12 @@ export default function HtmlUrlEncoder({ state, onStateChange, onClear }) {
               className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 ${
                 primary
                   ? 'text-white'
-                  : 'bg-white text-stone-600 border border-stone-200'
+                  : ''
               }`}
-              style={primary ? { backgroundColor: '#F97316' } : {}}
+              style={primary
+                ? { backgroundColor: '#F97316' }
+                : { backgroundColor: 'var(--fab-bg)', color: 'var(--fab-text)', border: '1px solid var(--border)' }
+              }
             >
               {label === 'Copy' && copied ? (
                 <Check className="w-5 h-5" />

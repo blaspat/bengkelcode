@@ -3,13 +3,6 @@ import { Play, Copy, Trash2, Check } from 'lucide-react'
 import TextareaWithGutter from './TextareaWithGutter'
 import XmlTree from './XmlTree'
 
-function formatXml(xmlString) {
-  const parser = new DOMParser()
-  const doc = parser.parseFromString(xmlString, 'application/xml')
-  const serialize = new XMLSerializer()
-  return serialize.serializeToString(doc)
-}
-
 export default function XmlLinter({ state, onStateChange }) {
   const { input, output, error } = state
   const [copied, setCopied] = useState(false)
@@ -51,7 +44,7 @@ export default function XmlLinter({ state, onStateChange }) {
   }, [output])
 
   const clear = useCallback(() => {
-    onStateChange(s => ({ input: '', output: null, error: null }))
+    onStateChange({ input: '', output: null, error: null })
   }, [onStateChange])
 
   return (
@@ -73,13 +66,13 @@ export default function XmlLinter({ state, onStateChange }) {
           </div>
         )}
         <div
-          className="flex-1 rounded-2xl border border-stone-200 overflow-auto p-4"
-          style={{ backgroundColor: '#fafaf9' }}
+          className="flex-1 rounded-2xl border overflow-auto p-4"
+          style={{ backgroundColor: 'var(--bg-subtle)', borderColor: 'var(--border)' }}
         >
           {output ? (
             <XmlTree doc={output} />
           ) : (
-            <span className="text-stone-300">Formatted output will appear here...</span>
+            <span style={{ color: 'var(--text-muted)' }}>Formatted output will appear here...</span>
           )}
         </div>
       </div>
@@ -99,9 +92,12 @@ export default function XmlLinter({ state, onStateChange }) {
               className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 ${
                 primary
                   ? 'text-white'
-                  : 'bg-white text-stone-600 border border-stone-200'
+                  : ''
               }`}
-              style={primary ? { backgroundColor: '#F97316' } : {}}
+              style={primary
+                ? { backgroundColor: '#F97316' }
+                : { backgroundColor: 'var(--fab-bg)', color: 'var(--fab-text)', border: '1px solid var(--border)' }
+              }
             >
               {label === 'Copy' && copied ? (
                 <Check className="w-5 h-5" />

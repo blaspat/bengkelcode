@@ -65,7 +65,7 @@ function renderToCanvas(text, inputType, imageData, size, bgColor, shape) {
         return
       }
       resolve(canvas)
-    } catch (e) {
+    } catch {
       resolve(null)
     }
   })
@@ -100,7 +100,6 @@ function makeSvgDataUrl(text, inputType, imageData, size, bgColor, shape) {
 
   let content
   if (inputType === 'emoji' && text) {
-    // embed emoji as text — approximate
     const emojiEncoded = encodeURIComponent(text)
     content = `<text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-size="${Math.floor(size * 0.65)}" font-family="serif">${emojiEncoded}</text>`
   }
@@ -108,62 +107,66 @@ function makeSvgDataUrl(text, inputType, imageData, size, bgColor, shape) {
   return `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}">${bg}${content || ''}</svg>`
 }
 
-export default function FaviconGenerator({ state, onStateChange, onClear }) {
+async function generateAll(emoji, inputType, imageData, bgColor, shape) {
+  const size = 32
+  const svgUrl = makeSvgDataUrl(emoji, inputType, imageData, size, bgColor, shape)
+
+  let previewDataUrl = ''
+  const canvas = await renderToCanvas(emoji, inputType, imageData, size, bgColor, shape)
+  if (canvas) {
+    try {
+      previewDataUrl = canvas.toDataURL('image/png')
+    } catch { /* canvas may be tainted */ }
+  }
+
+  const pngs = {}
+  for (const s of SIZES) {
+    const c = await renderToCanvas(emoji, inputType, imageData, s, bgColor, shape)
+    if (c) {
+      try {
+        pngs[s] = c.toDataURL('image/png')
+      } catch { /* canvas may be tainted */ }
+    }
+  }
+
+  const tag = `<link rel="icon" type="image/svg+xml" href="${svgUrl}">`
+
+  return { svgUrl, previewDataUrl, pngs, tag }
+}
+
+export default function FaviconGenerator({ state, onStateChange }) {
   const { inputType, emoji, imageData, bgColor, shape } = state
   const [previewDataUrl, setPreviewDataUrl] = useState('')
   const [svgDataUrl, setSvgDataUrl] = useState('')
   const [pngDataUrls, setPngDataUrls] = useState({})
   const [linkTag, setLinkTag] = useState('')
-  const [copied, setCopied] = useState(false)
   const [copiedTag, setCopiedTag] = useState(false)
   const [error, setError] = useState('')
-  const canvasRef = useRef({})
   const fileInputRef = useRef(null)
-
-  const generate = useCallback(async () => {
-    const size = 32
-    setError('')
-
-    // Generate SVG data URL
-    const svgUrl = makeSvgDataUrl(emoji, inputType, imageData, size, bgColor, shape)
-    setSvgDataUrl(svgUrl)
-
-    // Generate preview (32px canvas)
-    const canvas = await renderToCanvas(emoji, inputType, imageData, size, bgColor, shape)
-    if (canvas) {
-      try {
-        const dataUrl = canvas.toDataURL('image/png')
-        setPreviewDataUrl(dataUrl)
-      } catch (e) {
-        // canvas may be tainted
-      }
-    }
-
-    // Generate PNGs at standard favicon sizes
-    const pngs = {}
-    for (const s of SIZES) {
-      const c = await renderToCanvas(emoji, inputType, imageData, s, bgColor, shape)
-      if (c) {
-        try {
-          pngs[s] = c.toDataURL('image/png')
-        } catch (e) {
-          // canvas may be tainted
-        }
-      }
-    }
-    setPngDataUrls(pngs)
-
-    // Make link tag
-    const tag = `<link rel="icon" type="image/svg+xml" href="${svgUrl}">`
-    setLinkTag(tag)
-  }, [emoji, inputType, imageData, bgColor, shape])
+  const mountedRef = useRef(true)
 
   useEffect(() => {
-    generate().catch(err => {
-      console.error('FaviconGenerator generate error:', err)
-      setError('Failed to generate preview')
+    return () => { mountedRef.current = false }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    generateAll(emoji, inputType, imageData, bgColor, shape).then(result => {
+      if (!cancelled && mountedRef.current) {
+        setSvgDataUrl(result.svgUrl)
+        setPreviewDataUrl(result.previewDataUrl)
+        setPngDataUrls(result.pngs)
+        setLinkTag(result.tag)
+        setError('')
+      }
+    }).catch(err => {
+      if (!cancelled && mountedRef.current) {
+        setError('Failed to generate preview')
+        console.error('FaviconGenerator generate error:', err)
+      }
     })
-  }, [generate])
+    return () => { cancelled = true }
+  }, [emoji, inputType, imageData, bgColor, shape])
 
   const handleEmojiChange = useCallback((val) => {
     onStateChange(s => ({ ...s, emoji: val, inputType: 'emoji', imageData: '' }))
@@ -198,20 +201,6 @@ export default function FaviconGenerator({ state, onStateChange, onClear }) {
     setTimeout(() => setCopiedTag(false), 1500)
   }, [linkTag])
 
-  const copyPng = useCallback((size) => {
-    const dataUrl = pngDataUrls[size]
-    if (!dataUrl) return
-    fetch(dataUrl)
-      .then(r => r.blob())
-      .then(blob => {
-        navigator.clipboard.write([
-          new ClipboardItem({ 'image/png': blob })
-        ])
-        setCopied(true)
-        setTimeout(() => setCopied(false), 1500)
-      })
-  }, [pngDataUrls])
-
   const downloadSvg = useCallback(() => {
     const a = document.createElement('a')
     a.href = svgDataUrl
@@ -231,6 +220,8 @@ export default function FaviconGenerator({ state, onStateChange, onClear }) {
   const clear = useCallback(() => {
     onStateChange({ inputType: 'emoji', emoji: '', imageData: '', bgColor: DEFAULT_BG, shape: DEFAULT_SHAPE })
   }, [onStateChange])
+
+  const hasPngs = Object.keys(pngDataUrls).length > 0
 
   return (
     <div className="mt-4 flex flex-col lg:flex-row gap-4 min-h-[calc(100svh-200px)]">
@@ -396,7 +387,7 @@ export default function FaviconGenerator({ state, onStateChange, onClear }) {
         </div>
 
         {/* PNG downloads */}
-        {Object.keys(pngDataUrls).length > 0 && (
+        {hasPngs && (
           <div className="flex flex-col gap-2">
             <span className="text-xs uppercase font-medium" style={{ color: 'var(--text-muted)' }}>Download PNG</span>
             <div className="flex gap-2 flex-wrap">
@@ -410,26 +401,6 @@ export default function FaviconGenerator({ state, onStateChange, onClear }) {
                   <Download className="w-3.5 h-3.5" />
                   {size}×{size}
                 </button>
-              ))}
-            </div>
-            {/* Hidden canvases for clipboard copy */}
-            <div className="hidden">
-              {SIZES.map(size => (
-                <canvas
-                  key={size}
-                  ref={el => {
-                    if (el && pngDataUrls[size]) {
-                      const c = document.createElement('canvas')
-                      c.width = size
-                      c.height = size
-                      const ctx = c.getContext('2d')
-                      const img = new Image()
-                      img.src = pngDataUrls[size]
-                      img.onload = () => ctx.drawImage(img, 0, 0, size, size)
-                      // store for copy
-                    }
-                  }}
-                />
               ))}
             </div>
           </div>

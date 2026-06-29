@@ -5,52 +5,92 @@ import { FileText, Copy, Check, Trash2 } from 'lucide-react'
 function renderMarkdown(text) {
   if (!text) return ''
 
+  // Escape HTML first (must be done before other processing)
   let html = text
-    // Escape HTML first
-    html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    // Code blocks (```...```)
-    html = html.replace(/```([\s\S]*?)```/g, '<pre class="rounded-lg p-4 my-2" style="background:#f5f5f4;border:1px solid #e7e5e4"><code>$1</code></pre>')
-    // Inline code (`...`)
-    html = html.replace(/`([^`]+)`/g, '<code class="rounded px-1" style="background:#f5f5f4;font-family:monospace">$1</code>')
-    // Headers
-    html = html.replace(/^### (.*$)/gm, '<h3 class="text-base font-semibold mt-4 mb-2">$1</h3>')
-    html = html.replace(/^## (.*$)/gm, '<h2 class="text-lg font-semibold mt-4 mb-2">$1</h2>')
-    html = html.replace(/^# (.*$)/gm, '<h1 class="text-xl font-bold mt-4 mb-2">$1</h1>')
-    // Bold
-    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    // Italic
-    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>')
-    // Links
-    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" class="text-orange-500 underline">$1</a>')
-    // Images
-    html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="max-w-full rounded-lg my-2" />')
-    // Blockquotes
-    html = html.replace(/^> (.*$)/gm, '<blockquote class="border-l-4 border-orange-400 pl-4 my-2 text-stone-600 italic">$1</blockquote>')
-    // Unordered lists
-    html = html.replace(/^\- (.*$)/gm, '<li class="ml-4">$1</li>')
-    html = html.replace(/(<li.*<\/li>)/gs, '<ul class="list-disc ml-4 my-2">$1</ul>')
-    // Ordered lists
-    html = html.replace(/^\d+\. (.*$)/gm, '<li class="ml-4">$1</li>')
-    // Horizontal rule
-    html = html.replace(/^---$/gm, '<hr class="my-4 border-stone-200" />')
-    // Paragraphs
-    html = html.replace(/\n\n/g, '</p><p class="my-2">')
-    html = '<p class="my-2">' + html + '</p>'
-    // Clean up empty paragraphs
-    html = html.replace(/<p class="my-2"><\/p>/g, '')
-    // Line breaks
-    html = html.replace(/\n/g, '<br />')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
 
-  return html
+  // Split into blocks for proper block-level rendering
+  const blocks = html.split('\n\n')
+
+  const renderedBlocks = blocks.map(block => {
+    const lines = block.split('\n')
+    const firstLine = lines[0]
+
+    // Code blocks
+    if (firstLine.startsWith('```') && block.endsWith('```')) {
+      const code = block.slice(3, -3).trim()
+      return `<pre class="rounded-lg p-4 my-2" style="background:#f5f5f4;border:1px solid #e7e5e4"><code>${code}</code></pre>`
+    }
+
+    // Headers
+    if (firstLine.startsWith('### ')) {
+      return `<h3 class="text-base font-semibold mt-4 mb-2">${block.slice(4)}</h3>`
+    }
+    if (firstLine.startsWith('## ')) {
+      return `<h2 class="text-lg font-semibold mt-4 mb-2">${block.slice(3)}</h2>`
+    }
+    if (firstLine.startsWith('# ')) {
+      return `<h1 class="text-xl font-bold mt-4 mb-2">${block.slice(2)}</h1>`
+    }
+
+    // Horizontal rule
+    if (/^---+$/.test(firstLine.trim())) {
+      return '<hr class="my-4 border-stone-200" />'
+    }
+
+    // Blockquotes
+    if (firstLine.startsWith('> ')) {
+      const content = lines
+        .filter(l => l.startsWith('> '))
+        .map(l => l.slice(2))
+        .join('<br />')
+      return `<blockquote class="border-l-4 border-orange-400 pl-4 my-2 text-stone-600 italic">${content}</blockquote>`
+    }
+
+    // Unordered list
+    if (firstLine.startsWith('- ') || firstLine.startsWith('* ')) {
+      const items = lines
+        .filter(l => l.startsWith('- ') || l.startsWith('* '))
+        .map(l => `<li>${l.slice(2)}</li>`)
+        .join('')
+      return `<ul class="list-disc ml-4 my-2">${items}</ul>`
+    }
+
+    // Ordered list
+    if (/^\d+\.\s/.test(firstLine)) {
+      const items = lines
+        .filter(l => /^\d+\.\s/.test(l))
+        .map(l => `<li>${l.replace(/^\d+\.\s/, '')}</li>`)
+        .join('')
+      return `<ol class="list-decimal ml-4 my-2">${items}</ol>`
+    }
+
+    // Paragraph — apply inline formatting
+    let paragraph = block
+      // Inline code
+      .replace(/`([^`]+)`/g, '<code class="rounded px-1" style="background:#f5f5f4;font-family:monospace">$1</code>')
+      // Bold
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      // Italic
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+      // Links
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" class="text-orange-500 underline">$1</a>')
+      // Images
+      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="max-w-full rounded-lg my-2" />')
+      // Line breaks within paragraph
+      .replace(/\n/g, '<br />')
+
+    return `<p class="my-2">${paragraph}</p>`
+  })
+
+  return renderedBlocks.join('\n')
 }
 
 export default function MarkdownPreview({ state, onStateChange }) {
-  const { input, output } = state
+  const { input } = state
   const [copied, setCopied] = useState(false)
-
-  const updatePreview = useCallback(() => {
-    onStateChange(s => ({ ...s, output: s.input }))
-  }, [onStateChange])
 
   const copy = useCallback(() => {
     if (!input) return
@@ -63,7 +103,7 @@ export default function MarkdownPreview({ state, onStateChange }) {
     onStateChange({ input: '', output: '' })
   }, [onStateChange])
 
-  const rendered = output ? renderMarkdown(output) : ''
+  const rendered = input ? renderMarkdown(input) : ''
 
   return (
     <div className="mt-4 flex flex-col lg:flex-row gap-4 min-h-[calc(100svh-200px)]">
