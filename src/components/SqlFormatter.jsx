@@ -96,14 +96,16 @@ export default function SqlFormatter({ state, onStateChange }) {
         {output && (
           <button
             onClick={copy}
-            className="w-12 h-12 rounded-full bg-white text-stone-600 border border-stone-200 flex items-center justify-center shadow-lg hover:bg-stone-50"
+            className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
+            style={{ backgroundColor: 'var(--fab-bg)', color: 'var(--fab-text)', border: '1px solid var(--border)' }}
           >
             {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
           </button>
         )}
         <button
           onClick={clear}
-          className="w-12 h-12 rounded-full bg-white text-stone-600 border border-stone-200 flex items-center justify-center shadow-lg hover:bg-stone-50"
+          className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
+          style={{ backgroundColor: 'var(--fab-bg)', color: 'var(--fab-text)', border: '1px solid var(--border)' }}
         >
           <Trash2 className="w-5 h-5" />
         </button>
