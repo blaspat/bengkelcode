@@ -47,14 +47,7 @@ function yamlToProperties(yamlStr) {
   return lines.join('\n')
 }
 
-function detectType(input) {
-  const trimmed = input.trim()
-  if (trimmed.startsWith('{') || trimmed.startsWith('[')) return 'JSON'
-  if (trimmed.includes('=') && !trimmed.includes(':')) return 'Properties'
-  return 'YAML'
-}
-
-export default function YamlConverter({ state, onStateChange, onClear }) {
+export default function YamlConverter({ state, onStateChange }) {
   const [inputType, setInputType] = useState('YAML')
   const [outputType, setOutputType] = useState('JSON')
   const [copied, setCopied] = useState(false)
@@ -127,7 +120,7 @@ export default function YamlConverter({ state, onStateChange, onClear }) {
   }, [output])
 
   const clear = useCallback(() => {
-    onStateChange(s => ({ input: '', output: '', error: null }))
+    onStateChange({ input: '', output: '', error: null })
   }, [onStateChange])
 
   const typeSelector = (current, other, side) => (

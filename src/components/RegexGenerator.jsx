@@ -1,75 +1,5 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { Copy, Trash2, Check } from 'lucide-react'
-import cronstrue from 'cronstrue'
-import cronParser from 'cron-parser'
-
-const WEEKDAY_LABELS = { '*': 'Every', '0': 'Sun', '1': 'Mon', '2': 'Tue', '3': 'Wed', '4': 'Thu', '5': 'Fri', '6': 'Sat' }
-const MONTH_LABELS = { '*': 'Every', '1': 'Jan', '2': 'Feb', '3': 'Mar', '4': 'Apr', '5': 'May', '6': 'Jun', '7': 'Jul', '8': 'Aug', '9': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dec' }
-
-const COMMON_REGEX = [
-  { label: 'Email', pattern: '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}' },
-  { label: 'URL', pattern: 'https?:\\/\\/[\\w\\-]+(\\.[\\w\\-]+)+([\\w\\-.,@?^=%&:\\/~+#]*[\\w\\-@?^=%&\\/~+#])?' },
-  { label: 'Phone (ID)', pattern: '\\+62[0-9]{9,12}' },
-  { label: 'Phone (US)', pattern: '\\+?1?[-. ]?\\(?[0-9]{3}\\)?[-. ]?[0-9]{3}[-. ]?[0-9]{4}' },
-  { label: 'IPv4', pattern: '\\b(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b' },
-  { label: 'UUID', pattern: '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}' },
-  { label: 'Date (YYYY-MM-DD)', pattern: '\\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])' },
-  { label: 'Time (HH:MM)', pattern: '(?:[01]?[0-9]|2[0-3]):[0-5][0-9]' },
-]
-
-function MultiSelect({ options, selected, onChange, labels }) {
-  const [open, setOpen] = useState(false)
-
-  const toggle = (val) => {
-    if (val === '*') {
-      onChange(['*'])
-      return
-    }
-    const next = selected.includes(val)
-      ? selected.filter(v => v !== val)
-      : [...selected, val].sort((a, b) => Number(a) - Number(b))
-    onChange(next.length === 0 ? ['*'] : next)
-  }
-
-  const display = selected.includes('*')
-    ? 'Every'
-    : selected.map(v => labels?.[v] ?? v).join(', ')
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen(o => !o)}
-        className="w-full px-3 py-2 rounded-xl border border-stone-200 text-sm text-stone-700 text-left focus:outline-none focus:border-orange-400 transition-colors cursor-pointer"
-        style={{ backgroundColor: '#fafaf9' }}
-      >
-        {display}
-        <span className="float-right mt-0.5 text-stone-400">▼</span>
-      </button>
-      {open && (
-        <div className="absolute z-20 mt-1 w-full bg-white rounded-xl border border-stone-200 shadow-lg max-h-48 overflow-y-auto">
-          {options.map(opt => {
-            const checked = selected.includes(opt.value)
-            return (
-              <label
-                key={opt.value}
-                className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-stone-50 text-sm text-stone-700"
-              >
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => toggle(opt.value)}
-                  className="rounded border-stone-300 text-orange-500 focus:ring-orange-400"
-                />
-                {opt.label}
-              </label>
-            )
-          })}
-        </div>
-      )}
-    </div>
-  )
-}
 
 const FLAG_INFO = {
   g: { label: 'global', desc: 'Find all matches, not just the first one' },
@@ -118,39 +48,28 @@ function Tooltip({ text }) {
 export default function RegexGenerator({ state, onStateChange }) {
   const { testString, pattern, flags } = state
   const [copied, setCopied] = useState(false)
-  const [matches, setMatches] = useState([])
-  const [error, setError] = useState(null)
 
-  useEffect(() => {
-    if (!pattern) {
-      setMatches([])
-      setError(null)
-      return
-    }
+  // Compute matches directly — derived state, no effect needed
+  const [matches, error] = useMemo(() => {
+    if (!pattern) return [[], null]
     try {
       const re = new RegExp(pattern, flags)
-      if (!testString) {
-        setMatches([])
-        setError(null)
-        return
-      }
+      if (!testString) return [[], null]
       const found = []
       let m
       while ((m = re.exec(testString)) !== null) {
         found.push({ match: m[0], index: m.index, groups: m.slice(1) })
         if (!re.global) break
       }
-      setMatches(found)
-      setError(null)
+      return [found, null]
     } catch (e) {
-      setError(e.message)
-      setMatches([])
+      return [[], e.message]
     }
   }, [testString, pattern, flags])
 
-  const setField = (field, val) => {
+  const setField = useCallback((field, val) => {
     onStateChange(s => ({ ...s, [field]: val }))
-  }
+  }, [onStateChange])
 
   const copy = useCallback(() => {
     navigator.clipboard.writeText(pattern)
@@ -160,12 +79,7 @@ export default function RegexGenerator({ state, onStateChange }) {
 
   const clear = useCallback(() => {
     onStateChange({ testString: '', pattern: '', flags: 'g', error: null })
-    setMatches([])
   }, [onStateChange])
-
-  const applyPattern = (p) => {
-    onStateChange(s => ({ ...s, pattern: p }))
-  }
 
   // Highlighted HTML
   const highlighted = (() => {
@@ -278,10 +192,10 @@ export default function RegexGenerator({ state, onStateChange }) {
             <div className="mt-2 rounded-xl border border-stone-200 divide-y divide-stone-100 overflow-hidden" style={{ backgroundColor: '#fafaf9' }}>
               {matches.map((m, i) => (
                 <div key={i} className="px-4 py-2 text-xs font-mono">
-                  <span className="text-orange-500 font-semibold">"{m.match}"</span>
+                  <span className="text-orange-500 font-semibold">&quot;{m.match}&quot;</span>
                   <span className="text-stone-400 ml-2">index {m.index}</span>
                   {m.groups.length > 0 && (
-                    <span className="text-stone-400 ml-2">groups: {m.groups.map(g => `"${g}"`).join(', ')}</span>
+                    <span className="text-stone-400 ml-2">groups: {m.groups.map(g => `&quot;${g}&quot;`).join(', ')}</span>
                   )}
                 </div>
               ))}

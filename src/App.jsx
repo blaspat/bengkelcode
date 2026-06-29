@@ -129,62 +129,106 @@ function applyTheme(theme) {
   root.setAttribute('data-theme', theme)
 }
 
-function loadState() {
+// Lazy read saved state once for initializers
+function getSavedState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) return JSON.parse(raw)
-  } catch {}
+  } catch { /* localStorage unavailable */ }
   return null
 }
+const saved = getSavedState()
 
 function saveState(state) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-  } catch {}
+  } catch { /* localStorage full or blocked */ }
 }
+
+// Helper to create default tool state objects
+const defaults = {
+  json: () => ({ input: '', output: '', error: null }),
+  xml: () => ({ input: '', output: '', error: null }),
+  cron: () => ({ fields: { minute: '*', hour: '*', day: '*', month: '*', weekday: '*' }, expression: '* * * * *' }),
+  regex: () => ({ testString: '', pattern: '', flags: 'g' }),
+  encryption: () => ({ cipher: 'base64', input: '', output: '', error: null }),
+  jwt: () => ({ token: '', output: null, error: null }),
+  epoch: () => ({ epoch: '', output: null, error: null }),
+  sql: () => ({ input: '', output: '', error: null }),
+  markdown: () => ({ input: '', output: '' }),
+  qr: () => ({ input: '', size: 256 }),
+  yaml: () => ({ input: '', output: '', error: null }),
+  diff: () => ({ left: '', right: '', result: null }),
+  jsonToJava: () => ({ input: '', output: null, error: null }),
+  htmlUrl: () => ({ mode: 'html-encode', input: '', output: null, error: null }),
+}
+
+const defaultCron = defaults.cron()
+const defaultRegex = defaults.regex()
+const defaultEncryption = defaults.encryption()
+const defaultJwt = defaults.jwt()
+const defaultEpoch = defaults.epoch()
+const defaultSql = defaults.sql()
+const defaultMarkdown = defaults.markdown()
+const defaultQr = defaults.qr()
+const defaultYaml = defaults.yaml()
+const defaultDiff = defaults.diff()
+const defaultJsonToJava = defaults.jsonToJava()
+const defaultHtmlUrl = defaults.htmlUrl()
 
 export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try { return JSON.parse(localStorage.getItem(SIDEBAR_STORAGE_KEY))?.collapsed ?? false } catch { return false }
   })
   const [openCategories, setOpenCategories] = useState(() => {
-    try { const raw = localStorage.getItem(LAST_CAT_KEY); if (raw) { const parsed = JSON.parse(raw); if (Array.isArray(parsed) && parsed.length > 0) return parsed } } catch {}
+    try {
+      const raw = localStorage.getItem(LAST_CAT_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      }
+    } catch { /* localStorage unavailable */ }
     return ['data', 'text', 'encode', 'time', 'code', 'utility']
   })
   const [activeTab, setActiveTab] = useState('json')
-  const [theme, setTheme] = useState('light')
+  const [theme, setTheme] = useState(() => {
+    try {
+      const stored = localStorage.getItem(THEME_KEY)
+      const initial = stored === 'dark' || stored === 'light' ? stored : 'light'
+      applyTheme(initial)
+      return initial
+    } catch { return 'light' }
+  })
   const [searchQuery, setSearchQuery] = useState('')
   const [showDropdown, setShowDropdown] = useState(false)
   const [mobileCat, setMobileCat] = useState(() => {
-    try { const raw = localStorage.getItem(LAST_CAT_KEY); if (raw) { const parsed = JSON.parse(raw); if (Array.isArray(parsed) && parsed[0]) return parsed[0] } } catch {}
+    try {
+      const raw = localStorage.getItem(LAST_CAT_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (Array.isArray(parsed) && parsed[0]) return parsed[0]
+      }
+    } catch { /* localStorage unavailable */ }
     return 'data'
   })
   const searchRef = useRef(null)
-  const [jsonState, setJsonState] = useState({ input: '', output: '', error: null })
-  const [xmlState, setXmlState] = useState({ input: '', output: '', error: null })
-  const [cronState, setCronState] = useState(null)
-  const [regexState, setRegexState] = useState({ testString: '', pattern: '', flags: 'g' })
-  const [encryptionState, setEncryptionState] = useState({ cipher: 'base64', input: '', output: '', error: null })
-  const [jwtState, setJwtState] = useState({ token: '', output: null, error: null })
-  const [epochState, setEpochState] = useState({ epoch: '', output: null, error: null })
-  const [sqlState, setSqlState] = useState({ input: '', output: '', error: null })
-  const [markdownState, setMarkdownState] = useState({ input: '', output: '' })
-  const [qrState, setQrState] = useState({ input: '', size: 256 })
-  const [yamlState, setYamlState] = useState({ input: '', output: '', error: null })
-  const [diffState, setDiffState] = useState({ left: '', right: '', result: null })
-  const [jsonToJavaState, setJsonToJavaState] = useState({ input: '', output: null, error: null })
-  const [htmlUrlState, setHtmlUrlState] = useState({ mode: 'html-encode', input: '', output: null, error: null })
+  const [jsonState, setJsonState] = useState(saved?.json ?? defaults.json())
+  const [xmlState, setXmlState] = useState(saved?.xml ?? defaults.xml())
+  const [cronState, setCronState] = useState(saved?.cron ?? defaultCron)
+  const [regexState, setRegexState] = useState(saved?.regex ?? defaultRegex)
+  const [encryptionState, setEncryptionState] = useState(saved?.encryption ?? defaultEncryption)
+  const [jwtState, setJwtState] = useState(saved?.jwt ?? defaultJwt)
+  const [epochState, setEpochState] = useState(saved?.epoch ?? defaultEpoch)
+  const [sqlState, setSqlState] = useState(saved?.sql ?? defaultSql)
+  const [markdownState, setMarkdownState] = useState(saved?.markdown ?? defaultMarkdown)
+  const [qrState, setQrState] = useState(saved?.qr ?? defaultQr)
+  const [yamlState, setYamlState] = useState(saved?.yaml ?? defaultYaml)
+  const [diffState, setDiffState] = useState(saved?.diff ?? defaultDiff)
+  const [jsonToJavaState, setJsonToJavaState] = useState(saved?.jsonToJava ?? defaultJsonToJava)
+  const [htmlUrlState, setHtmlUrlState] = useState(saved?.htmlUrl ?? defaultHtmlUrl)
   const [meetingCostState, setMeetingCostState] = useState({ attendees: '', hourlyRate: '', duration: '', result: null })
   const [faviconState, setFaviconState] = useState({ inputType: 'emoji', emoji: '⚙️', imageData: '', bgColor: '#F97316', shape: 'rounded' })
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
-
-  // Init theme
-  useEffect(() => {
-    const stored = localStorage.getItem(THEME_KEY)
-    const initial = stored === 'dark' || stored === 'light' ? stored : 'light'
-    setTheme(initial)
-    applyTheme(initial)
-  }, [])
 
   // Mobile resize
   useEffect(() => {
@@ -212,45 +256,23 @@ export default function App() {
     localStorage.setItem(LAST_CAT_KEY, JSON.stringify(openCategories))
   }, [openCategories])
 
-  // Load saved state
+  // Persist all tool state (debounced to avoid excessive writes)
   useEffect(() => {
-    const saved = loadState()
-    if (saved) {
-      if (saved.json) setJsonState(saved.json)
-      if (saved.xml) setXmlState(saved.xml)
-      if (saved.cron) setCronState(saved.cron)
-      if (saved.regex) setRegexState(saved.regex)
-      if (saved.encryption) setEncryptionState(saved.encryption)
-      if (saved.jwt) setJwtState(saved.jwt)
-      if (saved.epoch) setEpochState(saved.epoch)
-      if (saved.sql) setSqlState(saved.sql)
-      if (saved.markdown) setMarkdownState(saved.markdown)
-      if (saved.qr) setQrState(saved.qr)
-      if (saved.yaml) setYamlState(saved.yaml)
-      if (saved.diff) setDiffState(saved.diff)
-      if (saved.jsonToJava) setJsonToJavaState(saved.jsonToJava)
-      if (saved.htmlUrl) setHtmlUrlState(saved.htmlUrl)
-      if (saved.favicon) setFaviconState(saved.favicon)
-    } else {
-      setCronState({ fields: { minute: '*', hour: '*', day: '*', month: '*', weekday: '*' }, expression: '* * * * *' })
-      setRegexState({ testString: '', pattern: '', flags: 'g' })
-      setEncryptionState({ cipher: 'base64', input: '', output: '', error: null })
-      setJwtState({ token: '', output: null, error: null })
-      setEpochState({ epoch: '', output: null, error: null })
-      setSqlState({ input: '', output: '', error: null })
-      setMarkdownState({ input: '', output: '' })
-      setQrState({ input: '', size: 256 })
-      setYamlState({ input: '', output: '', error: null })
-      setDiffState({ left: '', right: '', result: null })
-      setJsonToJavaState({ input: '', output: null, error: null })
-      setHtmlUrlState({ mode: 'html-encode', input: '', output: null, error: null })
-    }
-  }, [])
-
-  // Persist state
-  useEffect(() => {
-    saveState({ json: jsonState, xml: xmlState, cron: cronState, regex: regexState, encryption: encryptionState, jwt: jwtState, epoch: epochState, sql: sqlState, markdown: markdownState, qr: qrState, yaml: yamlState, diff: diffState, jsonToJava: jsonToJavaState, htmlUrl: htmlUrlState, favicon: faviconState })
-  }, [jsonState, xmlState, cronState, regexState, encryptionState, jwtState, epochState, sqlState, markdownState, qrState, yamlState, diffState, jsonToJavaState, htmlUrlState, faviconState])
+    const timer = setTimeout(() => {
+      saveState({
+        json: jsonState, xml: xmlState, cron: cronState, regex: regexState,
+        encryption: encryptionState, jwt: jwtState, epoch: epochState,
+        sql: sqlState, markdown: markdownState, qr: qrState, yaml: yamlState,
+        diff: diffState, jsonToJava: jsonToJavaState, htmlUrl: htmlUrlState,
+        favicon: faviconState,
+      })
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [
+    jsonState, xmlState, cronState, regexState, encryptionState,
+    jwtState, epochState, sqlState, markdownState, qrState, yamlState,
+    diffState, jsonToJavaState, htmlUrlState, faviconState,
+  ])
 
   const toggleCategory = useCallback((id) => {
     setOpenCategories(prev =>
@@ -280,20 +302,20 @@ export default function App() {
   }, [])
 
   const clearAll = useCallback(() => {
-    setJsonState({ input: '', output: '', error: null })
-    setXmlState({ input: '', output: '', error: null })
-    setCronState({ fields: { minute: '*', hour: '*', day: '*', month: '*', weekday: '*' }, expression: '* * * * *' })
-    setRegexState({ testString: '', pattern: '', flags: 'g' })
-    setEncryptionState({ cipher: 'base64', input: '', output: '', error: null })
-    setJwtState({ token: '', output: null, error: null })
-    setEpochState({ epoch: '', output: null, error: null })
-    setSqlState({ input: '', output: '', error: null })
-    setMarkdownState({ input: '', output: '' })
-    setQrState({ input: '', size: 256 })
-    setYamlState({ input: '', output: '', error: null })
-    setDiffState({ left: '', right: '', result: null })
-    setJsonToJavaState({ input: '', output: null, error: null })
-    setHtmlUrlState({ mode: 'html-encode', input: '', output: null, error: null })
+    setJsonState(defaults.json())
+    setXmlState(defaults.xml())
+    setCronState(defaultCron)
+    setRegexState(defaultRegex)
+    setEncryptionState(defaultEncryption)
+    setJwtState(defaultJwt)
+    setEpochState(defaultEpoch)
+    setSqlState(defaultSql)
+    setMarkdownState(defaultMarkdown)
+    setQrState(defaultQr)
+    setYamlState(defaultYaml)
+    setDiffState(defaultDiff)
+    setJsonToJavaState(defaultJsonToJava)
+    setHtmlUrlState(defaultHtmlUrl)
     setMeetingCostState({ attendees: '', hourlyRate: '', duration: '', result: null })
     setFaviconState({ inputType: 'emoji', emoji: '⚙️', imageData: '', bgColor: '#F97316', shape: 'rounded' })
   }, [])
@@ -328,8 +350,6 @@ export default function App() {
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
   }, [])
-
-  const activeCat = categories.find(c => c.tools.some(t => t.id === activeTab))
 
   // ---- Mobile top dropdown ----
   const mobileCatTools = categories.find(c => c.id === mobileCat)?.tools || []

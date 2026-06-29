@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { Play, Copy, Trash2, Check, Braces, ArrowLeftRight } from 'lucide-react'
+import { Play, Copy, Trash2, Check } from 'lucide-react'
 import TextareaWithGutter from './TextareaWithGutter'
 
 function toPascalCase(str) {
@@ -77,7 +77,7 @@ function generateJavaClass(json, className) {
   return `${hasImports ? importLines + '\n\n' : ''}import com.fasterxml.jackson.annotation.JsonProperty;\n\npublic class ${className} {\n${fieldDefs}${innerClasses}\n}`
 }
 
-export default function JsonToJava({ state, onStateChange, onClear }) {
+export default function JsonToJava({ state, onStateChange }) {
   const { input, output, error } = state
   const [copied, setCopied] = useState(false)
   const [className, setClassName] = useState('MyClass')
@@ -112,7 +112,7 @@ export default function JsonToJava({ state, onStateChange, onClear }) {
   }, [output])
 
   const clear = useCallback(() => {
-    onStateChange(s => ({ input: '', output: null, error: null }))
+    onStateChange({ input: '', output: null, error: null })
   }, [onStateChange])
 
   return (
@@ -180,9 +180,12 @@ export default function JsonToJava({ state, onStateChange, onClear }) {
               className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 ${
                 primary
                   ? 'text-white'
-                  : 'bg-white text-stone-600 border border-stone-200'
+                  : ''
               }`}
-              style={primary ? { backgroundColor: '#F97316' } : {}}
+              style={primary
+                ? { backgroundColor: '#F97316' }
+                : { backgroundColor: 'var(--fab-bg)', color: 'var(--fab-text)', border: '1px solid var(--border)' }
+              }
             >
               {label === 'Copy' && copied ? (
                 <Check className="w-5 h-5" />

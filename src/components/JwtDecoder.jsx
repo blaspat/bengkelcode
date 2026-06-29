@@ -64,8 +64,8 @@ export default function JwtDecoder({ state, onStateChange }) {
           value={token}
           onChange={e => onStateChange(s => ({ ...s, token: e.target.value }))}
           placeholder="Paste your JWT here..."
-          className="flex-1 p-4 rounded-2xl border border-stone-200 font-mono text-sm text-stone-800 placeholder-stone-300 resize-none focus:outline-none focus:border-orange-400 transition-colors"
-          style={{ backgroundColor: '#fafaf9' }}
+          className="flex-1 p-4 rounded-2xl border font-mono text-sm placeholder-stone-300 resize-none focus:outline-none focus:border-orange-400 transition-colors"
+          style={{ backgroundColor: 'var(--bg-subtle)', borderColor: 'var(--border)', color: 'var(--text)' }}
         />
       </div>
 
@@ -83,13 +83,15 @@ export default function JwtDecoder({ state, onStateChange }) {
         <button
           onClick={copy}
           disabled={!output}
-          className="w-10 h-10 rounded-xl bg-white text-stone-600 border border-stone-200 flex items-center justify-center hover:bg-stone-50 transition-colors disabled:opacity-50"
+          className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors disabled:opacity-50"
+          style={{ backgroundColor: 'var(--fab-bg)', color: 'var(--fab-text)', border: '1px solid var(--border)' }}
         >
           {copied ? <Check className="w-4 h-4" /> : <Key className="w-4 h-4" />}
         </button>
         <button
           onClick={clear}
-          className="w-10 h-10 rounded-xl bg-white text-stone-600 border border-stone-200 flex items-center justify-center hover:bg-stone-50 transition-colors"
+          className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
+          style={{ backgroundColor: 'var(--fab-bg)', color: 'var(--fab-text)', border: '1px solid var(--border)' }}
         >
           <X className="w-4 h-4" />
         </button>
@@ -115,14 +117,21 @@ export default function JwtDecoder({ state, onStateChange }) {
           )}
 
           {/* Header */}
-          <div className="rounded-xl border border-stone-200 overflow-hidden">
-            <div className="px-4 py-2 text-xs text-stone-400 uppercase border-b border-stone-100" style={{ backgroundColor: '#f5f5f4' }}>Header</div>
-            <pre className="p-4 font-mono text-sm text-stone-700 whitespace-pre-wrap">{formatJSON(output.header)}</pre>
+          <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+            <div className="px-4 py-2 text-xs uppercase border-b flex items-center justify-between" style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--nav-hover-bg)' }}>
+              <span>Header</span>
+              {output.payload.exp && (
+                <span className={`text-xs px-2 py-0.5 rounded-full ${expired ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                  {expired ? 'Expired' : 'Valid'}
+                </span>
+              )}
+            </div>
+            <pre className="p-4 font-mono text-sm whitespace-pre-wrap" style={{ color: 'var(--text)' }}>{formatJSON(output.header)}</pre>
           </div>
 
           {/* Payload */}
-          <div className="rounded-xl border border-stone-200 overflow-hidden">
-            <div className="px-4 py-2 text-xs text-stone-400 uppercase border-b border-stone-100 flex items-center justify-between" style={{ backgroundColor: '#f5f5f4' }}>
+          <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+            <div className="px-4 py-2 text-xs uppercase border-b" style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--nav-hover-bg)' }}>
               <span>Payload</span>
               {output.payload.exp && (
                 <span className={`text-xs px-2 py-0.5 rounded-full ${expired ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
@@ -130,7 +139,7 @@ export default function JwtDecoder({ state, onStateChange }) {
                 </span>
               )}
             </div>
-            <pre className="p-4 font-mono text-sm text-stone-700 whitespace-pre-wrap">{formatJSON(output.payload)}</pre>
+            <pre className="p-4 font-mono text-sm whitespace-pre-wrap" style={{ color: 'var(--text)' }}>{formatJSON(output.payload)}</pre>
           </div>
         </div>
       )}

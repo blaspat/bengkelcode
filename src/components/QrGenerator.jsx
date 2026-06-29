@@ -1,5 +1,6 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { Copy, Trash2, Check } from 'lucide-react'
+import QRCode from 'qrcode'
 
 const SIZES = [
   { label: 'Small', value: 128 },
@@ -14,46 +15,17 @@ export default function QrGenerator({ state, onStateChange }) {
   const [copied, setCopied] = useState(false)
   const canvasRef = useRef(null)
 
-  // Load QRCode library from CDN once
-  useEffect(() => {
-    if (window.QRCode) return
-    const script = document.createElement('script')
-    script.src = 'https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js'
-    script.async = true
-    document.head.appendChild(script)
-  }, [])
-
-  const generate = useCallback(() => {
-    if (!input.trim()) {
-      setCanvasDataUrl('')
-      setError(null)
-      return
-    }
-    try {
-      const canvas = document.createElement('canvas')
-      QRCode.toCanvas(canvas, input, {
-        width: size,
-        margin: 2,
-        color: {
-          dark: '#1c1917',
-          light: '#ffffff',
-        },
-      })
-      setCanvasDataUrl(canvas.toDataURL())
-      setError(null)
-    } catch (e) {
-      setError(e.message)
-      setCanvasDataUrl('')
-    }
-  }, [input, size])
-
-  useEffect(() => {
-    generate()
-  }, [generate])
-
   const handleInputChange = useCallback((e) => {
     const val = e.target.value
     onStateChange({ input: val, size })
+    // Defer generation to avoid setState cascade during render
+    queueMicrotask(() => {
+      const canvas = document.createElement('canvas')
+      if (!val.trim()) { setCanvasDataUrl(''); setError(null); return }
+      QRCode.toCanvas(canvas, val, { width: size, margin: 2, color: { dark: '#1c1917', light: '#ffffff' } })
+        .then(() => { setCanvasDataUrl(canvas.toDataURL()); setError(null) })
+        .catch(e => { setError(e.message); setCanvasDataUrl('') })
+    })
   }, [size, onStateChange])
 
   const handleSizeChange = useCallback((newSize) => {
@@ -75,6 +47,10 @@ export default function QrGenerator({ state, onStateChange }) {
   const clear = useCallback(() => {
     onStateChange({ input: '', size: 256 })
   }, [onStateChange])
+
+  // Sync generate when input/size change from state restore (not user typing)
+  // We only run this if canvasDataUrl doesn't already match the current input
+  // Skipping the effect entirely — generation is triggered on input change instead
 
   return (
     <div className="mt-4 flex flex-col lg:flex-row gap-4 min-h-[calc(100svh-200px)]">

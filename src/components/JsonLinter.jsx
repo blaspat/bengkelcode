@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { Play, Copy, Trash2, Check, Braces, ArrowLeftRight, Minus, GitCompare, ChevronsUpDown, ChevronsDownUp } from 'lucide-react'
+import { Play, Copy, Trash2, Braces, ArrowLeftRight, Minus, GitCompare, ChevronsUpDown, ChevronsDownUp } from 'lucide-react'
 import TextareaWithGutter from './TextareaWithGutter'
 import CollapsibleTree from './CollapsibleTree'
 
@@ -26,7 +26,7 @@ function jsonDiff(leftObj, rightObj) {
   return result
 }
 
-export default function JsonLinter({ state, onStateChange, onClear }) {
+export default function JsonLinter({ state, onStateChange }) {
   const { input, output, error } = state
   const [copied, setCopied] = useState(false)
   const [mode, setMode] = useState('format') // 'format' | 'compact' | 'compare'
@@ -70,7 +70,7 @@ export default function JsonLinter({ state, onStateChange, onClear }) {
   }, [output])
 
   const clear = useCallback(() => {
-    onStateChange(s => ({ input: '', output: null, error: null }))
+    onStateChange({ input: '', output: null, error: null })
   }, [onStateChange])
 
   const handleCompact = useCallback(() => {
@@ -81,7 +81,7 @@ export default function JsonLinter({ state, onStateChange, onClear }) {
     try {
       const parsed = JSON.parse(input)
       const compacted = JSON.stringify(parsed)
-      onStateChange(s => ({ ...s, input: compacted, output: null, error: null }))
+      onStateChange({ input: compacted, output: null, error: null })
     } catch (e) {
       onStateChange(s => ({ ...s, error: `Invalid JSON: ${e.message}`, output: null }))
     }
@@ -100,8 +100,8 @@ export default function JsonLinter({ state, onStateChange, onClear }) {
   }, [compareLeft, compareRight])
 
   const swapCompare = useCallback(() => {
-    setCompareLeft(s => compareRight)
-    setCompareRight(s => compareLeft)
+    setCompareLeft(compareRight)
+    setCompareRight(compareLeft)
   }, [compareLeft, compareRight])
 
   const clearCompare = useCallback(() => {

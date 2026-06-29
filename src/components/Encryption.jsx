@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { Copy, Trash2, Check, Lock, Unlock } from 'lucide-react'
+import { Copy, Trash2, Check, Lock } from 'lucide-react'
 const CIPHERS = [
   { id: 'base64', label: 'Base64', reversible: true },
   { id: 'sha1', label: 'SHA-1', reversible: false },
@@ -11,8 +11,6 @@ const CIPHERS = [
 ]
 
 async function md5(message) {
-  const msgUint8 = new TextEncoder().encode(message)
-  // Use RSA's md5 simulation via forge or just do it manually
   // crypto.subtle doesn't support MD5, so we use a pure-JS implementation
   function md5cycle(x, k) {
     let a = x[0], b = x[1], c = x[2], d = x[3]
@@ -124,7 +122,7 @@ async function md5(message) {
   }
   function hex(x) { for (let i = 0; i < x.length; i++) x[i] = rhex(x[i]); return x.join('') }
   function add32(a, b) { return (a + b) & 0xFFFFFFFF }
-  return hex(md51(msgUint8))
+  return hex(md51(message))
 }
 
 async function hashMessage(message, algorithm) {
@@ -176,7 +174,7 @@ export default function Encryption({ state, onStateChange }) {
     try {
       const result = decode(selectedCipher, input)
       onStateChange(s => ({ ...s, output: result || '', error: null }))
-    } catch (e) {
+    } catch {
       onStateChange(s => ({ ...s, output: '', error: 'Invalid input for decoding' }))
     }
   }, [input, selectedCipher, onStateChange])

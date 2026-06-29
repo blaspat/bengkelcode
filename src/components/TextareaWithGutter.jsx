@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useCallback, useRef } from 'react'
 
 /**
  * Textarea with a line number gutter.
@@ -9,13 +9,9 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 export default function TextareaWithGutter({ value, onChange, className = '', ...props }) {
   const textareaRef = useRef(null)
   const gutterRef = useRef(null)
-  const [lineCount, setLineCount] = useState(1)
 
-  // Keep line count in sync with value changes
-  useEffect(() => {
-    const lines = (value || '').split('\n').length
-    setLineCount(Math.max(lines, 1))
-  }, [value])
+  // Compute line count directly from value — derived, no effect needed
+  const lineCount = Math.max((value || '').split('\n').length, 1)
 
   // Scroll sync: gutter tracks textarea scroll
   const handleScroll = useCallback(() => {

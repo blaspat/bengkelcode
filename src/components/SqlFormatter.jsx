@@ -1,22 +1,9 @@
 import { useState, useCallback } from 'react'
 import { Database, Copy, Check, Trash2 } from 'lucide-react'
 
-const KEYWORDS = [
-  'SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'NOT', 'IN', 'LIKE', 'BETWEEN',
-  'JOIN', 'LEFT', 'RIGHT', 'INNER', 'OUTER', 'FULL', 'CROSS', 'ON',
-  'GROUP', 'BY', 'HAVING', 'ORDER', 'ASC', 'DESC', 'LIMIT', 'OFFSET',
-  'INSERT', 'INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE', 'CREATE',
-  'TABLE', 'INDEX', 'DROP', 'ALTER', 'AS', 'DISTINCT', 'UNION', 'ALL',
-  'EXISTS', 'CASE', 'WHEN', 'THEN', 'ELSE', 'END', 'NULL', 'IS',
-]
-
 function formatSQL(sql) {
   // Simple format with newlines and indentation
   let result = sql.trim()
-
-  // Upper case keywords
-  const kw = KEYWORDS.join('|')
-  const kwRegex = new RegExp(`\\b(${kw})\\b`, 'gi')
 
   // Add newlines before major keywords
   result = result
@@ -41,7 +28,7 @@ function formatSQL(sql) {
 }
 
 export default function SqlFormatter({ state, onStateChange }) {
-  const { input, output, error } = state
+  const { input, output } = state
   const [copied, setCopied] = useState(false)
 
   const format = useCallback(() => {
@@ -73,8 +60,8 @@ export default function SqlFormatter({ state, onStateChange }) {
           value={input}
           onChange={e => onStateChange(s => ({ ...s, input: e.target.value }))}
           placeholder="Paste your SQL here..."
-          className="flex-1 p-4 rounded-2xl border border-stone-200 font-mono text-sm text-stone-800 placeholder-stone-300 resize-none focus:outline-none focus:border-orange-400 transition-colors"
-          style={{ backgroundColor: '#fafaf9' }}
+          className="flex-1 p-4 rounded-2xl border font-mono text-sm placeholder-stone-300 resize-none focus:outline-none focus:border-orange-400 transition-colors"
+          style={{ backgroundColor: 'var(--bg-subtle)', borderColor: 'var(--border)', color: 'var(--text)' }}
         />
       </div>
 
@@ -83,14 +70,14 @@ export default function SqlFormatter({ state, onStateChange }) {
         <div
           className="flex-1 rounded-2xl border overflow-auto p-4 font-mono text-sm"
           style={{
-            backgroundColor: output ? '#f5f5f4' : '#fafaf9',
-            borderColor: '#e7e5e4',
+            backgroundColor: 'var(--bg-subtle)',
+            borderColor: 'var(--border)',
           }}
         >
           {output ? (
-            <pre className="whitespace-pre-wrap">{output}</pre>
+            <pre className="whitespace-pre-wrap" style={{ color: 'var(--text)' }}>{output}</pre>
           ) : (
-            <span className="text-stone-300">Formatted SQL will appear here...</span>
+            <span style={{ color: 'var(--text-muted)' }}>Formatted SQL will appear here...</span>
           )}
         </div>
 
@@ -109,14 +96,16 @@ export default function SqlFormatter({ state, onStateChange }) {
         {output && (
           <button
             onClick={copy}
-            className="w-12 h-12 rounded-full bg-white text-stone-600 border border-stone-200 flex items-center justify-center shadow-lg hover:bg-stone-50"
+            className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
+            style={{ backgroundColor: 'var(--fab-bg)', color: 'var(--fab-text)', border: '1px solid var(--border)' }}
           >
             {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
           </button>
         )}
         <button
           onClick={clear}
-          className="w-12 h-12 rounded-full bg-white text-stone-600 border border-stone-200 flex items-center justify-center shadow-lg hover:bg-stone-50"
+          className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
+          style={{ backgroundColor: 'var(--fab-bg)', color: 'var(--fab-text)', border: '1px solid var(--border)' }}
         >
           <Trash2 className="w-5 h-5" />
         </button>

@@ -26,6 +26,47 @@ class ErrorBoundary extends Component {
 
 const MAX_LINES_WARN = 2000
 
+function computeLcs(left, right) {
+  // Classic DP LCS table — O(n*m) time, O(n*m) space
+  const m = left.length
+  const n = right.length
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0))
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (left[i - 1] === right[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1] + 1
+      } else {
+        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1])
+      }
+    }
+  }
+
+  return dp
+}
+
+function backtrackDiff(left, right, dp) {
+  const result = []
+  let i = left.length
+  let j = right.length
+
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && left[i - 1] === right[j - 1]) {
+      result.unshift({ type: 'same', left: left[i - 1], right: right[j - 1], lineLeft: i, lineRight: j })
+      i--
+      j--
+    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+      result.unshift({ type: 'added', left: null, right: right[j - 1], lineLeft: null, lineRight: j })
+      j--
+    } else {
+      result.unshift({ type: 'removed', left: left[i - 1], right: null, lineLeft: i, lineRight: null })
+      i--
+    }
+  }
+
+  return result
+}
+
 function computeDiff(left, right) {
   if (left == null || right == null) return []
 
@@ -37,46 +78,8 @@ function computeDiff(left, right) {
     throw new Error(`Input too large (${Math.max(leftLines.length, rightLines.length)} lines). Maximum allowed is ${MAX_LINES_WARN} lines. Please split the input into smaller chunks.`)
   }
 
-  const result = []
-
-  // Hunt-McIlroy LCS-based diff — O(n) space instead of O(n²)
-  // Build diagonal map of LCS lengths
-  const diagonals = { 0: { i: 0, j: 0 } }
-  let i = 0
-  let j = 0
-  for (let l = 0; l < leftLines.length + rightLines.length; l++) {
-    // Extend along current diagonal
-    while (i < leftLines.length && j < rightLines.length && leftLines[i] === rightLines[j]) {
-      i++; j++
-    }
-    diagonals[j - i] = { i, j }
-    if (i >= leftLines.length && j >= rightLines.length) break
-    // Advance
-    if (j < rightLines.length && (i >= leftLines.length || (diagonals[j - i + 1] && diagonals[j - i + 1].i <= i + 1))) {
-      j++
-    } else {
-      i++
-    }
-  }
-
-  // Backtrack to build aligned diff
-  i = leftLines.length
-  j = rightLines.length
-  const aligned = []
-  while (i > 0 || j > 0) {
-    if (i > 0 && j > 0 && leftLines[i - 1] === rightLines[j - 1]) {
-      aligned.unshift({ type: 'same', left: leftLines[i - 1], right: rightLines[j - 1], lineLeft: i, lineRight: j })
-      i--; j--
-    } else if (j > 0 && (i === 0 || (diagonals[j - i - 1] && diagonals[j - i - 1].i >= i))) {
-      aligned.unshift({ type: 'added', left: null, right: rightLines[j - 1], lineLeft: null, lineRight: j })
-      j--
-    } else {
-      aligned.unshift({ type: 'removed', left: leftLines[i - 1], right: null, lineLeft: i, lineRight: null })
-      i--
-    }
-  }
-
-  return aligned
+  const dp = computeLcs(leftLines, rightLines)
+  return backtrackDiff(leftLines, rightLines, dp)
 }
 
 function formatDiffText(diff) {
@@ -93,7 +96,7 @@ export default function DiffTool({ state, onStateChange }) {
 
   const compare = useCallback(() => {
     const diff = computeDiff(left, right)
-    onStateChange(s => ({ ...s, result: diff }))
+    onStateChange(() => ({ left, right, result: diff }))
   }, [left, right, onStateChange])
 
   const swap = useCallback(() => {
@@ -101,7 +104,7 @@ export default function DiffTool({ state, onStateChange }) {
   }, [onStateChange])
 
   const clear = useCallback(() => {
-    onStateChange(s => ({ left: '', right: '', result: null }))
+    onStateChange({ left: '', right: '', result: null })
   }, [onStateChange])
 
   const copyDiff = useCallback(() => {
